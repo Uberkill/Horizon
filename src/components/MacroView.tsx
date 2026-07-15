@@ -1,25 +1,45 @@
 import { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
-import { TrendingDown, Home, Briefcase, Activity } from 'lucide-react';
+import { 
+  TrendingDown, Home, Briefcase, Activity, 
+  ShoppingCart, Landmark, Car, Baby, HeartPulse, 
+  Hourglass, GraduationCap, Users, Target, ShieldCheck, X, ExternalLink 
+} from 'lucide-react';
 import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
+  AreaChart, Area, BarChart, Bar, LineChart, Line,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 
+type TabKey = 'wealth' | 'food' | 'debt' | 'housing' | 'coe' | 'childcare' | 'wages' | 'medical' | 'longevity' | 'education' | 'taxbase' | 'frs';
+
+const MODULES = {
+  economic: [
+    { id: 'wealth', label: 'Wealth Erosion', icon: TrendingDown, sub: 'Core Inflation vs CPF' },
+    { id: 'food', label: 'The Daily Squeeze', icon: ShoppingCart, sub: 'CPI - Food' },
+    { id: 'debt', label: 'The Debt Trap', icon: Landmark, sub: 'MAS SORA Rates' }
+  ],
+  lifestyle: [
+    { id: 'housing', label: 'Housing Affordability', icon: Home, sub: 'HDB Resale Index' },
+    { id: 'coe', label: 'Cost of Aspiration', icon: Car, sub: 'COE Premiums' },
+    { id: 'childcare', label: 'The Parent Penalty', icon: Baby, sub: 'CPI - Childcare' }
+  ],
+  demographic: [
+    { id: 'wages', label: 'Wage Stagnation', icon: Briefcase, sub: 'Median Income Curve' },
+    { id: 'medical', label: 'Healthcare Crisis', icon: HeartPulse, sub: 'Medical Inflation' },
+    { id: 'longevity', label: 'Longevity Risk', icon: Hourglass, sub: 'Life Expectancy' },
+    { id: 'education', label: 'Education Inflation', icon: GraduationCap, sub: 'University Costs' },
+    { id: 'taxbase', label: 'Shrinking Tax Base', icon: Users, sub: 'Old-Age Support Ratio' },
+    { id: 'frs', label: 'Moving Goalpost', icon: Target, sub: 'CPF FRS Escalation' }
+  ]
+};
+
 export function MacroView() {
-  const [activeTab, setActiveTab] = useState<'wealth' | 'housing' | 'wages'>('wealth');
+  const [activeTab, setActiveTab] = useState<TabKey>('wealth');
   const [timeframe, setTimeframe] = useState<3 | 5 | 10 | 20>(20);
   
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerifierOpen, setVerifierOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -28,16 +48,19 @@ export function MacroView() {
     const loadData = async () => {
       let fetchedData: any[] = [];
       
-      if (activeTab === 'wealth') {
-        fetchedData = await apiService.fetchHistoricalInflationVsSavings();
-      } else if (activeTab === 'housing') {
-        fetchedData = await apiService.fetchHistoricalHousingIndex();
-      } else if (activeTab === 'wages') {
-        const medians = await apiService.fetchDemographicData();
-        fetchedData = Object.entries(medians).map(([ageGroup, median]) => ({
-          year: ageGroup, // repurpose 'year' key for XAxis
-          value: median
-        }));
+      switch(activeTab) {
+        case 'wealth': fetchedData = await apiService.fetchWealthErosion(); break;
+        case 'food': fetchedData = await apiService.fetchFoodInflation(); break;
+        case 'debt': fetchedData = await apiService.fetchSoraRates(); break;
+        case 'housing': fetchedData = await apiService.fetchHousingIndex(); break;
+        case 'coe': fetchedData = await apiService.fetchCoePrices(); break;
+        case 'childcare': fetchedData = await apiService.fetchChildcareCosts(); break;
+        case 'wages': fetchedData = await apiService.fetchWageCurve(); break;
+        case 'medical': fetchedData = await apiService.fetchMedicalInflation(); break;
+        case 'longevity': fetchedData = await apiService.fetchLifeExpectancy(); break;
+        case 'education': fetchedData = await apiService.fetchEducationInflation(); break;
+        case 'taxbase': fetchedData = await apiService.fetchOldAgeSupportRatio(); break;
+        case 'frs': fetchedData = await apiService.fetchCpfFrs(); break;
       }
 
       if (isMounted) {
@@ -53,87 +76,114 @@ export function MacroView() {
     return () => { isMounted = false; };
   }, [activeTab, timeframe]);
 
+  const getChartConfig = () => {
+    switch(activeTab) {
+      case 'wealth': return { type: 'area', color: '#ef4444', prefix: '$', name: 'Cost of Living', hasBaseline: true };
+      case 'food': return { type: 'area', color: '#f97316', prefix: '', name: 'Food Price Index' };
+      case 'debt': return { type: 'line', color: '#eab308', prefix: '', name: 'SORA Rate (%)' };
+      case 'housing': return { type: 'bar', color: '#3b82f6', prefix: '', name: 'Property Index' };
+      case 'coe': return { type: 'bar', color: '#8b5cf6', prefix: '$', name: 'COE Premium' };
+      case 'childcare': return { type: 'area', color: '#ec4899', prefix: '$', name: 'Avg Monthly Cost' };
+      case 'wages': return { type: 'area', color: '#10b981', prefix: '$', name: 'Median Monthly Income' };
+      case 'medical': return { type: 'area', color: '#f43f5e', prefix: '', name: 'Medical Inflation Index' };
+      case 'longevity': return { type: 'line', color: '#06b6d4', prefix: '', name: 'Life Expectancy (Years)' };
+      case 'education': return { type: 'area', color: '#6366f1', prefix: '$', name: 'Annual Tuition' };
+      case 'taxbase': return { type: 'area', color: '#f59e0b', prefix: '', name: 'Working Adults per Senior' };
+      case 'frs': return { type: 'area', color: '#14b8a6', prefix: '$', name: 'Full Retirement Sum' };
+      default: return { type: 'area', color: '#3b82f6', prefix: '', name: 'Value' };
+    }
+  };
+
+  const config = getChartConfig();
+
+  const getSourceDetails = () => {
+    switch(activeTab) {
+      case 'debt': return { source: 'Monetary Authority of Singapore (MAS)', id: 'MAS_SORA_HISTORICAL', url: 'https://eservices.mas.gov.sg/statistics/dir/DomesticInterestRates.aspx' };
+      case 'coe': return { source: 'Data.gov.sg (LTA)', id: 'LTA_COE_PREMIUMS', url: 'https://data.gov.sg/datasets/d_b41b9d4530fc9bd1119b4cfb2c28641b/view' };
+      default: return { source: 'Singapore Department of Statistics (SingStat)', id: `SINGSTAT_${activeTab.toUpperCase()}`, url: 'https://tablebuilder.singstat.gov.sg/' };
+    }
+  };
+
+  const sourceDetails = getSourceDetails();
+
   return (
-    <div className="w-full h-full flex flex-col lg:flex-row p-6 lg:p-8 gap-6 lg:gap-8 max-w-[1800px] mx-auto overflow-hidden animate-in fade-in zoom-in-95 duration-500">
+    <div className="w-full h-full flex flex-col lg:flex-row p-4 lg:p-6 gap-4 lg:gap-6 max-w-[1800px] mx-auto overflow-hidden animate-in fade-in zoom-in-95 duration-500">
       
-      {/* Vertical Sidebar */}
-      <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-4">
-        <div className="mb-4">
-          <h2 className="text-2xl font-semibold text-slate-100 tracking-tight">Intelligence</h2>
-          <p className="text-slate-400 text-sm">Official SingStat & MAS Data</p>
+      {/* 12-Module Sidebar */}
+      <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-2 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden pb-12 pr-2">
+        <div className="mb-2">
+          <h2 className="text-xl font-semibold text-slate-100 tracking-tight">Intelligence Arsenal</h2>
         </div>
 
-        <button 
-          onClick={() => setActiveTab('wealth')}
-          className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${activeTab === 'wealth' ? 'bg-slate-800 border-slate-600 shadow-md' : 'bg-slate-900/40 border-slate-800 hover:bg-slate-800/60'}`}
-        >
-          <div className={`p-2 rounded-lg ${activeTab === 'wealth' ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-800 text-slate-400'}`}>
-            <TrendingDown className="w-5 h-5" />
+        {Object.entries(MODULES).map(([category, items]) => (
+          <div key={category} className="mb-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 pl-2">
+              {category.replace('economic', 'Economic Threats').replace('lifestyle', 'Lifestyle & Aspiration').replace('demographic', 'Demographic Destiny')}
+            </h3>
+            <div className="flex flex-col gap-1.5">
+              {items.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button 
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id as TabKey)}
+                    className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all text-left ${isActive ? 'bg-slate-800 border-slate-600 shadow-md' : 'bg-transparent border-transparent hover:bg-slate-800/40'}`}
+                  >
+                    <div className={`p-1.5 rounded-lg ${isActive ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-400'}`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className={`font-medium text-sm ${isActive ? 'text-slate-100' : 'text-slate-300'}`}>{item.label}</p>
+                      <p className="text-[10px] text-slate-500">{item.sub}</p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
           </div>
-          <div>
-            <p className={`font-medium ${activeTab === 'wealth' ? 'text-slate-100' : 'text-slate-300'}`}>Wealth Erosion</p>
-            <p className="text-xs text-slate-500">CPI vs Interest Rates</p>
-          </div>
-        </button>
-
-        <button 
-          onClick={() => setActiveTab('housing')}
-          className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${activeTab === 'housing' ? 'bg-slate-800 border-slate-600 shadow-md' : 'bg-slate-900/40 border-slate-800 hover:bg-slate-800/60'}`}
-        >
-          <div className={`p-2 rounded-lg ${activeTab === 'housing' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-400'}`}>
-            <Home className="w-5 h-5" />
-          </div>
-          <div>
-            <p className={`font-medium ${activeTab === 'housing' ? 'text-slate-100' : 'text-slate-300'}`}>Housing Affordability</p>
-            <p className="text-xs text-slate-500">HDB Resale Index Growth</p>
-          </div>
-        </button>
-
-        <button 
-          onClick={() => setActiveTab('wages')}
-          className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${activeTab === 'wages' ? 'bg-slate-800 border-slate-600 shadow-md' : 'bg-slate-900/40 border-slate-800 hover:bg-slate-800/60'}`}
-        >
-          <div className={`p-2 rounded-lg ${activeTab === 'wages' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>
-            <Briefcase className="w-5 h-5" />
-          </div>
-          <div>
-            <p className={`font-medium ${activeTab === 'wages' ? 'text-slate-100' : 'text-slate-300'}`}>Wage Stagnation</p>
-            <p className="text-xs text-slate-500">Median Income by Age</p>
-          </div>
-        </button>
+        ))}
       </div>
 
       {/* Main Chart Area */}
       <div className="flex-1 bg-slate-900/40 p-6 lg:p-8 rounded-[2rem] border border-slate-700/50 shadow-2xl backdrop-blur-3xl relative flex flex-col min-h-0">
         
         {/* Header & Filters */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
             <h3 className="text-2xl font-semibold text-slate-100 tracking-wide">
-              {activeTab === 'wealth' && "Historical Purchasing Power"}
-              {activeTab === 'housing' && "Exponential Housing Growth"}
-              {activeTab === 'wages' && "The Earning Lifecycle"}
+              {MODULES.economic.concat(MODULES.lifestyle, MODULES.demographic).find(m => m.id === activeTab)?.label}
             </h3>
             <p className="text-slate-400 text-sm">
-              {activeTab === 'wages' ? 'SingStat 2024 Demographic Data' : 'Time-series empirical data (SingStat & MAS)'}
+              {MODULES.economic.concat(MODULES.lifestyle, MODULES.demographic).find(m => m.id === activeTab)?.sub}
             </p>
           </div>
 
-          {activeTab !== 'wages' && (
-            <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700">
-              {[3, 5, 10, 20].map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTimeframe(t as any)}
-                  className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                    timeframe === t ? 'bg-slate-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  {t === 20 ? 'Max' : `${t}Y`}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setVerifierOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-colors border border-emerald-500/20 text-xs font-medium"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              Verify Source
+            </button>
+
+            {activeTab !== 'wages' && (
+              <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700">
+                {[3, 5, 10, 20].map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setTimeframe(t as any)}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                      timeframe === t ? 'bg-slate-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    {t === 20 ? 'Max' : `${t}Y`}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Chart Container */}
@@ -144,59 +194,100 @@ export function MacroView() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              {activeTab === 'wealth' ? (
+              {config.type === 'area' ? (
                 <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
-                    <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                    <linearGradient id={`color-${activeTab}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={config.color} stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor={config.color} stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} opacity={0.5} />
                   <XAxis dataKey="year" stroke="#64748b" tickLine={false} axisLine={false} tickMargin={12} />
-                  <YAxis stroke="#64748b" tickFormatter={(v) => `$${v/1000}k`} tickLine={false} axisLine={false} tickMargin={12} />
+                  <YAxis stroke="#64748b" tickFormatter={(v) => `${config.prefix}${v.toLocaleString()}`} tickLine={false} axisLine={false} tickMargin={12} />
                   <Tooltip 
-                    formatter={(value: any) => `$${value.toLocaleString()}`}
+                    formatter={(value: any) => `${config.prefix}${value.toLocaleString()}`}
                     contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderRadius: '12px', border: '1px solid rgba(51, 65, 85, 0.5)' }}
                   />
-                  <Area type="monotone" dataKey="value" name="Cost of Living" stroke="#ef4444" strokeWidth={3} fill="url(#colorCost)" />
-                  <Line type="monotone" dataKey="baseline" name="Savings (CPF OA)" stroke="#64748b" strokeWidth={3} dot={false} />
+                  <Area type="monotone" dataKey="value" name={config.name} stroke={config.color} strokeWidth={3} fill={`url(#color-${activeTab})`} />
+                  {config.hasBaseline && <Line type="monotone" dataKey="baseline" name="Savings (CPF OA)" stroke="#64748b" strokeWidth={3} dot={false} />}
                 </AreaChart>
-              ) : activeTab === 'housing' ? (
+              ) : config.type === 'bar' ? (
                 <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} opacity={0.5} />
                   <XAxis dataKey="year" stroke="#64748b" tickLine={false} axisLine={false} tickMargin={12} />
-                  <YAxis stroke="#64748b" tickLine={false} axisLine={false} tickMargin={12} domain={['dataMin - 10', 'auto']} />
+                  <YAxis stroke="#64748b" tickFormatter={(v) => `${config.prefix}${v.toLocaleString()}`} tickLine={false} axisLine={false} tickMargin={12} domain={['dataMin', 'auto']} />
                   <Tooltip 
-                    formatter={(value: any) => value.toLocaleString()}
-                    labelFormatter={(label) => `Year ${label}`}
+                    formatter={(value: any) => `${config.prefix}${value.toLocaleString()}`}
                     contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderRadius: '12px', border: '1px solid rgba(51, 65, 85, 0.5)' }}
                   />
-                  <Bar dataKey="value" name="Property Index" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="value" name={config.name} fill={config.color} radius={[4, 4, 0, 0]} />
                 </BarChart>
               ) : (
-                <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorWage" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
+                <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} opacity={0.5} />
                   <XAxis dataKey="year" stroke="#64748b" tickLine={false} axisLine={false} tickMargin={12} />
-                  <YAxis stroke="#64748b" tickFormatter={(v) => `$${v}`} tickLine={false} axisLine={false} tickMargin={12} />
+                  <YAxis stroke="#64748b" tickFormatter={(v) => `${config.prefix}${v.toLocaleString()}`} tickLine={false} axisLine={false} tickMargin={12} domain={['dataMin', 'auto']} />
                   <Tooltip 
-                    formatter={(value: any) => `$${value.toLocaleString()}`}
-                    labelFormatter={(label) => `Age Group ${label}`}
+                    formatter={(value: any) => `${config.prefix}${value.toLocaleString()}`}
                     contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderRadius: '12px', border: '1px solid rgba(51, 65, 85, 0.5)' }}
                   />
-                  <Area type="monotone" dataKey="value" name="Median Income" stroke="#10b981" strokeWidth={3} fill="url(#colorWage)" />
-                </AreaChart>
+                  <Line type="monotone" dataKey="value" name={config.name} stroke={config.color} strokeWidth={3} dot={{ r: 4, fill: config.color }} />
+                </LineChart>
               )}
             </ResponsiveContainer>
           )}
         </div>
       </div>
+
+      {/* Evidence Verifier Modal */}
+      {isVerifierOpen && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-md w-full p-6 relative animate-in zoom-in-95 duration-200">
+            <button 
+              onClick={() => setVerifierOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <h4 className="text-lg font-semibold text-white">Source Verification</h4>
+                <p className="text-sm text-emerald-400">Official Government Data</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 bg-slate-950/50 p-4 rounded-xl border border-slate-800">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Data Provider</p>
+                <p className="text-sm font-medium text-slate-200">{sourceDetails.source}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Dataset ID</p>
+                <p className="text-sm font-mono text-slate-400">{sourceDetails.id}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Live Endpoint</p>
+                <p className="text-xs font-mono text-blue-400 truncate">{sourceDetails.url}</p>
+              </div>
+            </div>
+
+            <a 
+              href={sourceDetails.url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="mt-6 w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-medium transition-colors"
+            >
+              Access Official Database
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
