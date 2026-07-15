@@ -1,9 +1,5 @@
 /**
  * API Service Layer (Mock for MVP)
- * 
- * In production, these functions will be replaced with fetch() calls
- * to a backend proxy (e.g., Cloudflare Worker) which securely holds
- * the MAS and SingStat API keys.
  */
 
 export interface EconomicData {
@@ -13,7 +9,12 @@ export interface EconomicData {
   momMedianIncomes: Record<string, number>;
 }
 
-// Hardcoded empirical data from Singapore (2024 data)
+export interface TimeSeriesPoint {
+  year: number;
+  value: number;
+  baseline?: number;
+}
+
 const MOM_2024_MEDIANS: Record<string, number> = {
   "15-19": 1170,
   "20-24": 3269,
@@ -28,37 +29,19 @@ const MOM_2024_MEDIANS: Record<string, number> = {
 };
 
 export const apiService = {
-  /**
-   * Mocks a call to the MAS API for Core Inflation and CPF interest rates.
-   */
+  // Existing Micro Canvas Endpoints
   async fetchMacroIndicators(): Promise<{ inflation: number; cpfBase: number }> {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    return {
-      inflation: 0.028, // MAS 2024 Core Inflation
-      cpfBase: 0.025    // CPF OA Floor
-    };
+    return { inflation: 0.028, cpfBase: 0.025 };
   },
 
-  /**
-   * Mocks a call to the SingStat API for MOM Household Income data.
-   */
   async fetchDemographicData(): Promise<Record<string, number>> {
-    await new Promise(resolve => setTimeout(resolve, 600));
     return MOM_2024_MEDIANS;
   },
 
-  /**
-   * Mocks a call to an aggregate market index tracker (e.g. MSCI World proxy).
-   */
   async fetchMarketOptimizedReturn(): Promise<number> {
-    await new Promise(resolve => setTimeout(resolve, 400));
-    return 0.065; // 6.5% long-term conservative proxy
+    return 0.065;
   },
 
-  /**
-   * Helper function to get the median for a specific age.
-   */
   getMedianForAge(age: number, medians: Record<string, number>): number {
     if (!medians || Object.keys(medians).length === 0) return 0;
     if (age < 20) return medians["15-19"];
@@ -71,5 +54,51 @@ export const apiService = {
     if (age < 55) return medians["50-54"];
     if (age < 60) return medians["55-59"];
     return medians["60+"];
+  },
+
+  // NEW: Macro Dashboard Time-Series Endpoints (Mocking 20 years of data from 2004 to 2024)
+  async fetchHistoricalInflationVsSavings(): Promise<TimeSeriesPoint[]> {
+    const currentYear = 2024;
+    const data: TimeSeriesPoint[] = [];
+    let costOfLiving = 100000; // Base $100k
+    let savings = 100000;
+    
+    // Simulating compounding inflation (~2.5% avg over 20 yrs, spiking recently) vs fixed 2.5% CPF
+    for (let i = 20; i >= 0; i--) {
+      const year = currentYear - i;
+      // Fake historical inflation: slow till 2021, spikes after
+      let infRate = 0.015; 
+      if (year >= 2021) infRate = 0.045; // Post-COVID spike
+      if (year === 2024) infRate = 0.028;
+
+      if (i < 20) {
+        costOfLiving = costOfLiving * (1 + infRate);
+        savings = savings * 1.025; // CPF OA
+      }
+      
+      data.push({ year, value: Math.round(costOfLiving), baseline: Math.round(savings) });
+    }
+    return data;
+  },
+
+  async fetchHistoricalHousingIndex(): Promise<TimeSeriesPoint[]> {
+    const currentYear = 2024;
+    const data: TimeSeriesPoint[] = [];
+    let indexValue = 80;
+    
+    for (let i = 20; i >= 0; i--) {
+      const year = currentYear - i;
+      // Housing index growth simulation
+      let growth = 0.03;
+      if (year > 2008 && year < 2013) growth = 0.08; // Boom
+      if (year > 2013 && year < 2018) growth = -0.01; // Cooling measures
+      if (year >= 2020) growth = 0.09; // Post-COVID boom
+      
+      if (i < 20) {
+        indexValue = indexValue * (1 + growth);
+      }
+      data.push({ year, value: Math.round(indexValue) });
+    }
+    return data;
   }
 };
