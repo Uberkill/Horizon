@@ -1,15 +1,32 @@
 import { useStore } from '../store/useStore';
+import { apiService } from '../services/apiService';
 import { ShieldAlert, Gauge, HeartHandshake } from 'lucide-react';
 import React from 'react';
 
 export function Widgets() {
-  const { clientData, stressTests, toggleStressTest } = useStore();
+  const { clientData, stressTests, toggleStressTest, economicData } = useStore();
 
   const netCashFlow = clientData.monthlyIncome - clientData.monthlyExpenses;
   const isInMassiveDebt = clientData.totalDebt > (clientData.monthlyIncome * 36);
   const isNegativeCashFlow = netCashFlow < 0;
   const showDebtMode = isInMassiveDebt || isNegativeCashFlow;
-  const percentile = Math.min(99, Math.max(1, Math.round(((clientData.monthlyIncome / 10000) * 50) + 10)));
+  
+  // API-driven percentile calculation
+  let percentile = 50;
+  let medianIncome = 0;
+  if (economicData?.momMedianIncomes) {
+    medianIncome = apiService.getMedianForAge(clientData.age, economicData.momMedianIncomes);
+    if (medianIncome > 0) {
+      if (clientData.monthlyIncome >= medianIncome) {
+        const ratio = (clientData.monthlyIncome - medianIncome) / medianIncome;
+        percentile = 50 + Math.min(49, ratio * 40);
+      } else {
+        const ratio = clientData.monthlyIncome / medianIncome;
+        percentile = Math.max(1, ratio * 50);
+      }
+    }
+  }
+  percentile = Math.round(percentile);
 
   return (
     <div className="flex flex-col gap-6">
@@ -86,7 +103,9 @@ export function Widgets() {
                 <span className="text-3xl font-bold text-slate-100">{100 - percentile}%</span>
               </div>
             </div>
-            <p className="text-[10px] text-slate-500 text-center leading-relaxed max-w-[200px]">Benchmarked against MOM 2024 Survey (Age {clientData.age})</p>
+            <p className="text-[10px] text-slate-500 text-center leading-relaxed max-w-[200px]">
+              Benchmarked against MOM API Data for Age {clientData.age} (Median: ${medianIncome})
+            </p>
           </div>
         )}
       </div>

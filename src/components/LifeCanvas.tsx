@@ -37,11 +37,14 @@ function CustomScatterNode(props: any) {
 }
 
 export function LifeCanvas() {
-  const { clientData, stressTests } = useStore();
+  const { clientData, stressTests, economicData } = useStore();
 
-  const INFLATION_RATE = stressTests.sustainedInflation ? 0.05 : 0.03;
-  const BASELINE_RETURN = 0.005;
-  const OPTIMIZED_RETURN = 0.06;
+  const INFLATION_RATE = stressTests.sustainedInflation 
+    ? 0.05 
+    : (economicData?.masCoreInflation ?? 0.028);
+    
+  const BASELINE_RETURN = economicData?.cpfOARate ?? 0.025;
+  const OPTIMIZED_RETURN = economicData?.optimizedPortfolioReturn ?? 0.065;
 
   const data = [];
   let currentBaseline = clientData.cash + clientData.cpfOA;

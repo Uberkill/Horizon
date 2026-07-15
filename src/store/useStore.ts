@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { apiService, type EconomicData } from '../services/apiService';
 
 export interface ClientData {
   age: number;
@@ -23,6 +24,13 @@ interface AppState {
     medicalEmergency: boolean;
   };
   toggleStressTest: (test: keyof AppState['stressTests']) => void;
+
+  // New API and Macro/Micro State
+  viewMode: 'macro' | 'micro';
+  setViewMode: (mode: 'macro' | 'micro') => void;
+  economicData: EconomicData | null;
+  isLoadingData: boolean;
+  initializeData: () => Promise<void>;
 }
 
 const initialClientData: ClientData = {
@@ -64,4 +72,33 @@ export const useStore = create<AppState>((set) => ({
         [test]: !state.stressTests[test]
       }
     })),
+
+  viewMode: 'micro', // default to client pitch view
+  setViewMode: (mode) => set({ viewMode: mode }),
+  
+  economicData: null,
+  isLoadingData: true,
+  initializeData: async () => {
+    set({ isLoadingData: true });
+    try {
+      const [macro, demographic, optimized] = await Promise.all([
+        apiService.fetchMacroIndicators(),
+        apiService.fetchDemographicData(),
+        apiService.fetchMarketOptimizedReturn()
+      ]);
+      
+      set({
+        economicData: {
+          masCoreInflation: macro.inflation,
+          cpfOARate: macro.cpfBase,
+          momMedianIncomes: demographic,
+          optimizedPortfolioReturn: optimized
+        },
+        isLoadingData: false
+      });
+    } catch (error) {
+      console.error("Failed to fetch API data", error);
+      set({ isLoadingData: false });
+    }
+  }
 }));
