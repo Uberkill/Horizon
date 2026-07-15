@@ -47,8 +47,14 @@ export function LifeCanvas() {
   const OPTIMIZED_RETURN = economicData?.optimizedPortfolioReturn ?? 0.065;
 
   const data = [];
-  let currentBaseline = clientData.cash + clientData.cpfOA;
-  let currentOptimized = clientData.cash + clientData.cpfOA;
+  // True Net Worth Calculation (Subagent Patched)
+  let currentBaselineCash = clientData.cash + clientData.cpfOA;
+  let currentBaselineDebt = clientData.totalDebt;
+  
+  let currentOptimizedCash = clientData.cash + clientData.cpfOA;
+  let currentOptimizedDebt = clientData.totalDebt;
+
+  const DEBT_INTEREST_RATE = 0.04; // 4% SORA + Spread
 
   for (let year = 0; year <= (85 - clientData.age); year++) {
     const currentAge = clientData.age + year;
@@ -67,18 +73,78 @@ export function LifeCanvas() {
       if (stressTests.medicalEmergency && year === 1) {
         yearSavings -= 36000;
       }
-      
-      currentBaseline = (currentBaseline * (1 + BASELINE_RETURN)) + yearSavings;
-      currentOptimized = (currentOptimized * (1 + OPTIMIZED_RETURN)) + yearSavings;
+
+      // Process Baseline
+      currentBaselineDebt *= (1 + DEBT_INTEREST_RATE);
+      if (yearSavings >= 0) {
+        // Surplus: Pay down debt first
+        if (currentBaselineDebt > 0) {
+          if (yearSavings >= currentBaselineDebt) {
+            yearSavings -= currentBaselineDebt;
+            currentBaselineDebt = 0;
+          } else {
+            currentBaselineDebt -= yearSavings;
+            yearSavings = 0;
+          }
+        }
+        currentBaselineCash = (currentBaselineCash * (1 + BASELINE_RETURN)) + yearSavings;
+      } else {
+        // Deficit Spiral: Drain cash, then increase debt
+        currentBaselineCash += yearSavings; // yearSavings is negative
+        if (currentBaselineCash < 0) {
+          currentBaselineDebt += Math.abs(currentBaselineCash);
+          currentBaselineCash = 0;
+        } else {
+          currentBaselineCash *= (1 + BASELINE_RETURN);
+        }
+      }
+
+      // Process Optimized
+      currentOptimizedDebt *= (1 + DEBT_INTEREST_RATE);
+      let optSavings = yearSavings; // Recalculate original savings for optimized path
+      if (currentAge < clientData.targetAge) {
+        optSavings = inflatedIncome - inflatedExpenses;
+      } else {
+        optSavings = -inflatedExpenses;
+      }
+      if (stressTests.medicalEmergency && year === 1) {
+        optSavings -= 36000;
+      }
+
+      if (optSavings >= 0) {
+        if (currentOptimizedDebt > 0) {
+          if (optSavings >= currentOptimizedDebt) {
+            optSavings -= currentOptimizedDebt;
+            currentOptimizedDebt = 0;
+          } else {
+            currentOptimizedDebt -= optSavings;
+            optSavings = 0;
+          }
+        }
+        currentOptimizedCash = (currentOptimizedCash * (1 + OPTIMIZED_RETURN)) + optSavings;
+      } else {
+        currentOptimizedCash += optSavings;
+        if (currentOptimizedCash < 0) {
+          currentOptimizedDebt += Math.abs(currentOptimizedCash);
+          currentOptimizedCash = 0;
+        } else {
+          currentOptimizedCash *= (1 + OPTIMIZED_RETURN);
+        }
+      }
       
       if (stressTests.covidCrash && year === 1) {
-         currentBaseline *= 0.70;
-         currentOptimized *= 0.90; 
+         currentBaselineCash *= 0.70;
+         currentOptimizedCash *= 0.90; 
       }
     }
     
-    const clampedBaseline = Math.max(-500000, currentBaseline);
-    const clampedOptimized = Math.max(-500000, currentOptimized);
+    // Net worth = Cash - Debt
+    let netBaseline = currentBaselineCash - currentBaselineDebt;
+    let netOptimized = currentOptimizedCash - currentOptimizedDebt;
+
+    // Remove artificial floor clamping, allow it to fall to actual depths, but cap extreme runaway debt for render sanity
+    const clampedBaseline = Math.max(-20000000, netBaseline);
+    const clampedOptimized = Math.max(-20000000, netOptimized);
 
     data.push({
       age: currentAge,
@@ -107,6 +173,13 @@ export function LifeCanvas() {
       currency: 'USD',
       maximumFractionDigits: 0,
     }).format(value);
+  };
+
+  const formatYAxis = (value: number) => {
+    if (Math.abs(value) >= 1000000) {
+      return `${value < 0 ? '-' : ''}$${Math.abs(value) / 1000000}M`;
+    }
+    return `${value < 0 ? '-' : ''}$${Math.abs(value) / 1000}k`;
   };
 
   const isMultipleStress = Object.values(stressTests).filter(Boolean).length > 1;
@@ -152,7 +225,7 @@ export function LifeCanvas() {
               <YAxis 
                 stroke="#64748b" 
                 tick={{ fill: '#64748b', fontSize: 12 }}
-                tickFormatter={(value) => `$${(value / 1000)}k`}
+                tickFormatter={formatYAxis}
                 axisLine={false}
                 tickLine={false}
                 tickMargin={12}

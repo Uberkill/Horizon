@@ -69,11 +69,11 @@ export function IntakeScreen() {
 
           <InputField label="Current Age" name="age" value={clientData.age} min={18} max={80} step={1} onChange={handleChange} />
           <InputField label="Target Retirement Age" name="targetAge" value={clientData.targetAge} min={clientData.age + 1} max={90} step={1} onChange={handleChange} />
-          <InputField label="Monthly Income ($)" name="monthlyIncome" value={clientData.monthlyIncome} min={0} max={50000} step={100} onChange={handleChange} />
-          <InputField label="Monthly Expenses ($)" name="monthlyExpenses" value={clientData.monthlyExpenses} min={0} max={50000} step={100} onChange={handleChange} />
-          <InputField label="Cash in Bank ($)" name="cash" value={clientData.cash} min={0} max={1000000} step={1000} onChange={handleChange} />
-          <InputField label="CPF OA Balance ($)" name="cpfOA" value={clientData.cpfOA} min={0} max={1000000} step={1000} onChange={handleChange} />
-          <InputField label="Total Debt ($)" name="totalDebt" value={clientData.totalDebt} min={0} max={2000000} step={1000} onChange={handleChange} />
+          <InputField label="Monthly Income ($)" name="monthlyIncome" value={clientData.monthlyIncome} min={0} max={200000} step={500} onChange={handleChange} />
+          <InputField label="Monthly Expenses ($)" name="monthlyExpenses" value={clientData.monthlyExpenses} min={0} max={200000} step={500} onChange={handleChange} />
+          <InputField label="Cash in Bank ($)" name="cash" value={clientData.cash} min={0} max={10000000} step={10000} onChange={handleChange} />
+          <InputField label="CPF OA Balance ($)" name="cpfOA" value={clientData.cpfOA} min={0} max={10000000} step={10000} onChange={handleChange} />
+          <InputField label="Total Debt ($)" name="totalDebt" value={clientData.totalDebt} min={0} max={10000000} step={10000} onChange={handleChange} />
         </div>
       </div>
     </>
