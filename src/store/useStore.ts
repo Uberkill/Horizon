@@ -55,7 +55,7 @@ export const useStore = create<AppState>((set) => ({
     })),
     
   resetClient: () => set({ 
-    clientData: initialClientData,
+    clientData: { ...initialClientData },
     stressTests: { covidCrash: false, sustainedInflation: false, medicalEmergency: false }
   }),
   
@@ -91,7 +91,7 @@ export const useStore = create<AppState>((set) => ({
         economicData: {
           masCoreInflation: macro.inflation,
           cpfOARate: macro.cpfBase,
-          momMedianIncomes: demographic,
+          momMedianIncomes: { ...demographic },
           optimizedPortfolioReturn: optimized
         },
         isLoadingData: false

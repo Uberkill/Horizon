@@ -79,7 +79,7 @@ export function LifeCanvas() {
       if (yearSavings >= 0) {
         // Surplus: Pay down debt first
         if (currentBaselineDebt > 0) {
-          if (yearSavings >= currentBaselineDebt) {
+          if (yearSavings >= currentBaselineDebt - 0.01) {
             yearSavings -= currentBaselineDebt;
             currentBaselineDebt = 0;
           } else {
@@ -89,13 +89,12 @@ export function LifeCanvas() {
         }
         currentBaselineCash = (currentBaselineCash * (1 + BASELINE_RETURN)) + yearSavings;
       } else {
-        // Deficit Spiral: Drain cash, then increase debt
+        // Deficit Spiral: Compound first, then drain cash, then increase debt
+        currentBaselineCash *= (1 + BASELINE_RETURN);
         currentBaselineCash += yearSavings; // yearSavings is negative
         if (currentBaselineCash < 0) {
           currentBaselineDebt += Math.abs(currentBaselineCash);
           currentBaselineCash = 0;
-        } else {
-          currentBaselineCash *= (1 + BASELINE_RETURN);
         }
       }
 
@@ -113,7 +112,7 @@ export function LifeCanvas() {
 
       if (optSavings >= 0) {
         if (currentOptimizedDebt > 0) {
-          if (optSavings >= currentOptimizedDebt) {
+          if (optSavings >= currentOptimizedDebt - 0.01) {
             optSavings -= currentOptimizedDebt;
             currentOptimizedDebt = 0;
           } else {
@@ -123,12 +122,11 @@ export function LifeCanvas() {
         }
         currentOptimizedCash = (currentOptimizedCash * (1 + OPTIMIZED_RETURN)) + optSavings;
       } else {
+        currentOptimizedCash *= (1 + OPTIMIZED_RETURN);
         currentOptimizedCash += optSavings;
         if (currentOptimizedCash < 0) {
           currentOptimizedDebt += Math.abs(currentOptimizedCash);
           currentOptimizedCash = 0;
-        } else {
-          currentOptimizedCash *= (1 + OPTIMIZED_RETURN);
         }
       }
       

@@ -11,7 +11,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="w-full h-[73px] bg-slate-900/60 backdrop-blur-2xl border-b border-slate-800/80 px-6 flex items-center justify-between z-40 sticky top-0 relative">
+    <nav className="w-full h-[73px] bg-slate-900/60 backdrop-blur-2xl border-b border-slate-800/80 px-6 flex items-center justify-between z-40 sticky top-0">
       <div className="flex items-center gap-3">
         <div className="p-2 bg-lime-500/10 rounded-xl border border-lime-500/20 shadow-[0_0_15px_rgba(132,204,22,0.15)]">
           <Activity className="w-5 h-5 text-lime-400" />

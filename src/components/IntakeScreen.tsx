@@ -30,7 +30,9 @@ export function IntakeScreen() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setClientData({ [name]: Number(value) });
+    let parsed = Number(value);
+    if (isNaN(parsed)) parsed = 0;
+    setClientData({ [name]: parsed });
   };
 
   return (
