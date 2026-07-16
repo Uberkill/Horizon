@@ -25,11 +25,23 @@ interface AppState {
   };
   toggleStressTest: (test: keyof AppState['stressTests']) => void;
 
-  portfolioRiskRatio: number; // 0 (100% Endowment) to 100 (100% ILP)
-  setPortfolioRiskRatio: (ratio: number) => void;
+  hasShieldPlan: boolean;
+  setHasShieldPlan: (v: boolean) => void;
   
-  hasProtectionPlan: boolean;
-  setHasProtectionPlan: (hasPlan: boolean) => void;
+  hasCIPlan: boolean;
+  setHasCIPlan: (v: boolean) => void;
+
+  premiumEndowment: number;
+  setPremiumEndowment: (v: number) => void;
+
+  premiumILP: number;
+  setPremiumILP: (v: number) => void;
+
+  premiumAnnuity: number;
+  setPremiumAnnuity: (v: number) => void;
+
+  premiumSRS: number;
+  setPremiumSRS: (v: number) => void;
 
   // New API and Macro/Micro State
   viewMode: 'macro' | 'micro';
@@ -63,8 +75,12 @@ export const useStore = create<AppState>((set) => ({
   resetClient: () => set({ 
     clientData: { ...initialClientData },
     stressTests: { covidCrash: false, sustainedInflation: false, medicalEmergency: false },
-    portfolioRiskRatio: 60,
-    hasProtectionPlan: false
+    hasShieldPlan: false,
+    hasCIPlan: false,
+    premiumEndowment: 0,
+    premiumILP: 0,
+    premiumAnnuity: 0,
+    premiumSRS: 0
   }),
   
   stressTests: {
@@ -81,11 +97,23 @@ export const useStore = create<AppState>((set) => ({
       }
     })),
 
-  portfolioRiskRatio: 60,
-  setPortfolioRiskRatio: (ratio) => set({ portfolioRiskRatio: ratio }),
+  hasShieldPlan: false,
+  setHasShieldPlan: (v) => set({ hasShieldPlan: v }),
   
-  hasProtectionPlan: false,
-  setHasProtectionPlan: (hasPlan) => set({ hasProtectionPlan: hasPlan }),
+  hasCIPlan: false,
+  setHasCIPlan: (v) => set({ hasCIPlan: v }),
+
+  premiumEndowment: 0,
+  setPremiumEndowment: (v) => set({ premiumEndowment: v }),
+
+  premiumILP: 0,
+  setPremiumILP: (v) => set({ premiumILP: v }),
+
+  premiumAnnuity: 0,
+  setPremiumAnnuity: (v) => set({ premiumAnnuity: v }),
+
+  premiumSRS: 0,
+  setPremiumSRS: (v) => set({ premiumSRS: v }),
 
   viewMode: 'micro', // default to client pitch view
   setViewMode: (mode) => set({ viewMode: mode }),

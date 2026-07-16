@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1784185205567" clover="3.2.0">
-  <project timestamp="1784185205567" name="All files">
-    <metrics statements="157" coveredstatements="64" conditionals="127" coveredconditionals="42" methods="59" coveredmethods="28" elements="343" coveredelements="134" complexity="0" loc="157" ncloc="157" packages="4" files="4" classes="4"/>
+<coverage generated="1784186750451" clover="3.2.0">
+  <project timestamp="1784186750452" name="All files">
+    <metrics statements="161" coveredstatements="64" conditionals="127" coveredconditionals="42" methods="63" coveredmethods="28" elements="351" coveredelements="134" complexity="0" loc="161" ncloc="161" packages="4" files="4" classes="4"/>
     <package name="components">
       <metrics statements="72" coveredstatements="38" conditionals="56" coveredconditionals="25" methods="22" coveredmethods="13"/>
       <file name="MacroView.tsx" path="C:\Users\oob\.gemini\antigravity\scratch\horizon-app\src\components\MacroView.tsx">
@@ -163,24 +163,28 @@
       </file>
     </package>
     <package name="store">
-      <metrics statements="15" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="11" coveredmethods="4"/>
+      <metrics statements="19" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="15" coveredmethods="4"/>
       <file name="useStore.ts" path="C:\Users\oob\.gemini\antigravity\scratch\horizon-app\src\store\useStore.ts">
-        <metrics statements="15" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="11" coveredmethods="4"/>
-        <line num="42" count="1" type="stmt"/>
-        <line num="52" count="1" type="stmt"/>
-        <line num="54" count="0" type="stmt"/>
-        <line num="59" count="1" type="stmt"/>
-        <line num="63" count="0" type="stmt"/>
-        <line num="77" count="0" type="stmt"/>
-        <line num="85" count="0" type="stmt"/>
-        <line num="88" count="0" type="stmt"/>
-        <line num="91" count="1" type="stmt"/>
-        <line num="96" count="0" type="stmt"/>
-        <line num="97" count="0" type="stmt"/>
-        <line num="98" count="0" type="stmt"/>
+        <metrics statements="19" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="15" coveredmethods="4"/>
+        <line num="54" count="1" type="stmt"/>
+        <line num="64" count="1" type="stmt"/>
+        <line num="66" count="0" type="stmt"/>
+        <line num="71" count="1" type="stmt"/>
+        <line num="75" count="0" type="stmt"/>
+        <line num="93" count="0" type="stmt"/>
+        <line num="101" count="0" type="stmt"/>
         <line num="104" count="0" type="stmt"/>
-        <line num="114" count="0" type="stmt"/>
-        <line num="115" count="0" type="stmt"/>
+        <line num="107" count="0" type="stmt"/>
+        <line num="110" count="0" type="stmt"/>
+        <line num="113" count="0" type="stmt"/>
+        <line num="116" count="0" type="stmt"/>
+        <line num="119" count="1" type="stmt"/>
+        <line num="124" count="0" type="stmt"/>
+        <line num="125" count="0" type="stmt"/>
+        <line num="126" count="0" type="stmt"/>
+        <line num="132" count="0" type="stmt"/>
+        <line num="142" count="0" type="stmt"/>
+        <line num="143" count="0" type="stmt"/>
       </file>
     </package>
   </project>

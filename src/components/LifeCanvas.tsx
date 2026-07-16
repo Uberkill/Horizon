@@ -37,7 +37,11 @@ function CustomScatterNode(props: any) {
 }
 
 export function LifeCanvas() {
-  const { clientData, stressTests, economicData, portfolioRiskRatio, hasProtectionPlan } = useStore();
+  const { 
+    clientData, stressTests, economicData, 
+    hasShieldPlan, hasCIPlan,
+    premiumEndowment, premiumILP, premiumAnnuity, premiumSRS 
+  } = useStore();
 
   const INFLATION_RATE = stressTests.sustainedInflation 
     ? 0.05 
@@ -54,6 +58,8 @@ export function LifeCanvas() {
   let optCPF = clientData.cpfOA;
   let optEndowment = 0;
   let optInvestments = 0;
+  let optAnnuity = 0;
+  let optSRS = 0;
   let optDebt = clientData.totalDebt;
 
   const DEBT_INTEREST_RATE = 0.04;
@@ -61,9 +67,8 @@ export function LifeCanvas() {
   const YIELD_CPF = 0.025;
   const YIELD_ENDOWMENT = 0.035;
   const YIELD_INVESTMENTS = 0.075;
-
-  const ratioEndowment = (100 - portfolioRiskRatio) / 100;
-  const ratioInvestments = portfolioRiskRatio / 100;
+  const YIELD_ANNUITY = 0.045;
+  const YIELD_SRS = 0.06;
 
   for (let year = 0; year <= (85 - clientData.age); year++) {
     const currentAge = clientData.age + year;
@@ -78,9 +83,9 @@ export function LifeCanvas() {
       if (currentAge < clientData.targetAge) {
         baseSavings = inflatedIncome - inflatedExpenses;
         optSavings = inflatedIncome - inflatedExpenses;
-        if (hasProtectionPlan) {
-          optSavings -= (inflatedIncome * 0.10); // 10% Protection Premium
-        }
+        
+        if (hasShieldPlan) optSavings -= 1200; // $100/mo * 12
+        if (hasCIPlan) optSavings -= 2400; // $200/mo * 12
       } else {
         baseSavings = -inflatedExpenses;
         optSavings = -inflatedExpenses;
@@ -88,8 +93,14 @@ export function LifeCanvas() {
 
       if (stressTests.medicalEmergency && year === 1) {
         baseSavings -= 150000;
-        if (!hasProtectionPlan) {
+        
+        // If they have shield, they don't lose the $150k.
+        // If they have CI, they GAIN $200k.
+        if (!hasShieldPlan) {
           optSavings -= 150000;
+        }
+        if (hasCIPlan) {
+          optSavings += 200000;
         }
       }
 
@@ -118,6 +129,30 @@ export function LifeCanvas() {
       // --- Process Optimized Stack ---
       optDebt *= (1 + DEBT_INTEREST_RATE);
       
+      let allocatedEndowment = 0;
+      let allocatedILP = 0;
+      let allocatedAnnuity = 0;
+      let allocatedSRS = 0;
+
+      if (currentAge < clientData.targetAge && optSavings >= 0) {
+         // Fulfill premium commitments first
+         const maxEndowment = Math.min(optSavings, premiumEndowment * 12);
+         allocatedEndowment = maxEndowment;
+         optSavings -= maxEndowment;
+
+         const maxILP = Math.min(optSavings, premiumILP * 12);
+         allocatedILP = maxILP;
+         optSavings -= maxILP;
+
+         const maxAnnuity = Math.min(optSavings, premiumAnnuity * 12);
+         allocatedAnnuity = maxAnnuity;
+         optSavings -= maxAnnuity;
+
+         const maxSRS = Math.min(optSavings, premiumSRS * 12);
+         allocatedSRS = maxSRS;
+         optSavings -= maxSRS;
+      }
+
       if (optSavings >= 0) {
         if (optDebt > 0) {
           if (optSavings >= optDebt) {
@@ -129,28 +164,19 @@ export function LifeCanvas() {
           }
         }
         
-        const cashCap = inflatedExpenses / 2;
-        optCash *= (1 + YIELD_CASH);
-        
-        if (optCash < cashCap) {
-           const cashNeeded = cashCap - optCash;
-           if (optSavings <= cashNeeded) {
-              optCash += optSavings;
-              optSavings = 0;
-           } else {
-              optCash += cashNeeded;
-              optSavings -= cashNeeded;
-           }
-        }
-
-        optEndowment = (optEndowment * (1 + YIELD_ENDOWMENT)) + (optSavings * ratioEndowment);
-        optInvestments = (optInvestments * (1 + YIELD_INVESTMENTS)) + (optSavings * ratioInvestments);
+        optCash = (optCash * (1 + YIELD_CASH)) + optSavings;
+        optEndowment = (optEndowment * (1 + YIELD_ENDOWMENT)) + allocatedEndowment;
+        optInvestments = (optInvestments * (1 + YIELD_INVESTMENTS)) + allocatedILP;
+        optAnnuity = (optAnnuity * (1 + YIELD_ANNUITY)) + allocatedAnnuity;
+        optSRS = (optSRS * (1 + YIELD_SRS)) + allocatedSRS;
         optCPF *= (1 + YIELD_CPF);
 
       } else {
         optCash *= (1 + YIELD_CASH);
         optEndowment *= (1 + YIELD_ENDOWMENT);
         optInvestments *= (1 + YIELD_INVESTMENTS);
+        optAnnuity *= (1 + YIELD_ANNUITY);
+        optSRS *= (1 + YIELD_SRS);
         optCPF *= (1 + YIELD_CPF);
 
         let deficit = Math.abs(optSavings);
@@ -170,6 +196,7 @@ export function LifeCanvas() {
               } else {
                  deficit -= optEndowment;
                  optEndowment = 0;
+                 // Keep it simple: don't drain Annuity/SRS, just go into debt
                  optDebt += deficit;
               }
            }
@@ -183,7 +210,7 @@ export function LifeCanvas() {
     }
     
     let netBaseline = currentBaselineCash - currentBaselineDebt;
-    let netOptCash = optCash - optDebt;
+    let netOptCash = optCash;
 
     data.push({
       age: currentAge,
@@ -192,7 +219,10 @@ export function LifeCanvas() {
       optCPF: Math.round(optCPF),
       optEndowment: Math.round(optEndowment),
       optInvestments: Math.round(optInvestments),
-      optimized: Math.round(Math.max(-20000000, optCash + optCPF + optEndowment + optInvestments - optDebt))
+      optAnnuity: Math.round(optAnnuity),
+      optSRS: Math.round(optSRS),
+      optDebtDisplay: -Math.round(optDebt),
+      optimized: Math.round(Math.max(-20000000, optCash + optCPF + optEndowment + optInvestments + optAnnuity + optSRS - optDebt))
     });
   }
 
@@ -299,6 +329,16 @@ export function LifeCanvas() {
               
               <Area 
                 type="monotone" 
+                dataKey="optDebtDisplay" 
+                name="Total Debt" 
+                stackId="2"
+                stroke="#ef4444" 
+                fill="#ef4444" 
+                fillOpacity={0.6}
+                activeDot={false}
+              />
+              <Area 
+                type="monotone" 
                 dataKey="optCash" 
                 name="Liquid Cash" 
                 stackId="1"
@@ -337,6 +377,26 @@ export function LifeCanvas() {
                 fillOpacity={0.6}
                 activeDot={{ r: 6, fill: "#a3e635", stroke: "#0f172a", strokeWidth: 2 }}
               />
+              <Area 
+                type="monotone" 
+                dataKey="optAnnuity" 
+                name="Retirement Annuity" 
+                stackId="1"
+                stroke="#f97316" 
+                fill="#f97316" 
+                fillOpacity={0.6}
+                activeDot={false}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="optSRS" 
+                name="SRS Index Fund" 
+                stackId="1"
+                stroke="#eab308" 
+                fill="#eab308" 
+                fillOpacity={0.6}
+                activeDot={false}
+              />
 
               {milestones.length > 0 && (
                 <Scatter 
@@ -370,6 +430,14 @@ export function LifeCanvas() {
           <div className="flex items-center gap-2 bg-slate-900/60 px-3 py-1.5 rounded-full backdrop-blur-md border border-slate-700/50">
             <div className="w-2 h-2 bg-[#a3e635] rounded-full" />
             <span className="text-[10px] text-slate-300 font-medium">Investments</span>
+          </div>
+          <div className="flex items-center gap-2 bg-slate-900/60 px-3 py-1.5 rounded-full backdrop-blur-md border border-slate-700/50">
+            <div className="w-2 h-2 bg-[#f97316] rounded-full" />
+            <span className="text-[10px] text-slate-300 font-medium">Annuity</span>
+          </div>
+          <div className="flex items-center gap-2 bg-slate-900/60 px-3 py-1.5 rounded-full backdrop-blur-md border border-slate-700/50">
+            <div className="w-2 h-2 bg-[#eab308] rounded-full" />
+            <span className="text-[10px] text-slate-300 font-medium">SRS</span>
           </div>
         </div>
       </div>

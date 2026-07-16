@@ -6,8 +6,12 @@ export function IntakeScreen() {
   const { 
     clientData, setClientData, 
     isDrawerOpen, setDrawerOpen,
-    portfolioRiskRatio, setPortfolioRiskRatio,
-    hasProtectionPlan, setHasProtectionPlan
+    hasShieldPlan, setHasShieldPlan,
+    hasCIPlan, setHasCIPlan,
+    premiumEndowment, setPremiumEndowment,
+    premiumILP, setPremiumILP,
+    premiumAnnuity, setPremiumAnnuity,
+    premiumSRS, setPremiumSRS
   } = useStore();
   const [warnings, setWarnings] = useState<string[]>([]);
   const [expandedPill, setExpandedPill] = useState<string | null>(null);
@@ -32,6 +36,15 @@ export function IntakeScreen() {
     }
     setWarnings(newWarnings);
   }, [clientData.monthlyIncome, clientData.monthlyExpenses]);
+
+  const monthlySurplus = clientData.monthlyIncome - clientData.monthlyExpenses;
+  let totalPremiums = 0;
+  if (hasShieldPlan) totalPremiums += 100;
+  if (hasCIPlan) totalPremiums += 200;
+  totalPremiums += premiumEndowment + premiumILP + premiumAnnuity + premiumSRS;
+  
+  const unallocated = monthlySurplus - totalPremiums;
+  const isDeficit = unallocated < 0;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -123,46 +136,83 @@ export function IntakeScreen() {
           <InputField label="Total Debt ($)" name="totalDebt" value={clientData.totalDebt} min={0} max={10000000} isLogarithmic={true} onChange={handleChange} />
           
           <div className="pt-6 mt-6 border-t border-slate-700/50 space-y-6">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">FA Portfolio Sandbox</h3>
             
-            <div className="space-y-3">
-              <div className="flex justify-between items-center text-xs font-medium text-slate-300">
-                <span>Safe (Endowments)</span>
-                <span>Growth (ILPs)</span>
-              </div>
-              <input 
-                type="range" 
-                min={0} max={100} step={1}
-                value={portfolioRiskRatio}
-                onChange={(e) => setPortfolioRiskRatio(Number(e.target.value))}
-                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-lime-500 hover:accent-lime-400 transition-all duration-300"
-              />
-              <div className="flex justify-between items-center text-[10px] text-slate-500">
-                <span>{100 - portfolioRiskRatio}% Allocation</span>
-                <span>{portfolioRiskRatio}% Allocation</span>
-              </div>
+            <div className={`sticky top-0 z-20 p-4 rounded-xl border backdrop-blur-xl shadow-lg transition-colors duration-300 ${isDeficit ? 'bg-rose-500/10 border-rose-500/50' : 'bg-slate-800/80 border-slate-700'}`}>
+               <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Unallocated Cash Flow</h3>
+               <div className={`text-2xl font-bold font-mono tracking-tight ${isDeficit ? 'text-rose-400' : 'text-lime-400'}`}>
+                 ${unallocated.toLocaleString()}/mo
+               </div>
+               {isDeficit && <p className="text-xs text-rose-400 mt-1">Warning: Client cannot afford this portfolio.</p>}
             </div>
 
-            <div 
-              className={`flex items-start justify-between gap-4 cursor-pointer group outline-none rounded-lg p-3 border transition-all duration-300 ${
-                hasProtectionPlan ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-slate-800 border-slate-700'
-              }`}
-              onClick={() => setHasProtectionPlan(!hasProtectionPlan)}
-            >
-              <div className="space-y-1">
-                <span className={`text-sm font-medium transition-colors ${hasProtectionPlan ? 'text-indigo-400' : 'text-slate-300'}`}>
-                  Comprehensive Shield / CI
-                </span>
-                <p className="text-xs text-slate-500">Transfers Medical Emergency risk to insurer (10% of Income).</p>
-              </div>
-              <div className={`w-10 h-6 rounded-full flex items-center p-1 shrink-0 transition-colors duration-300 ${
-                hasProtectionPlan ? 'bg-indigo-500' : 'bg-slate-700 group-hover:bg-slate-600'
-              }`}>
-                <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-300 ${
-                  hasProtectionPlan ? 'translate-x-4' : 'translate-x-0'
-                }`} />
-              </div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">FA Product Cart</h3>
+            
+            {/* Bucket 1: Protection */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-medium text-slate-500 uppercase">Bucket 1: Protection (The Moat)</h4>
+              
+              <ToggleCard 
+                active={hasShieldPlan} 
+                onToggle={() => setHasShieldPlan(!hasShieldPlan)}
+                title="Integrated Shield + Rider" 
+                desc="Neutralizes Medical Emergency drawdown." 
+                cost="$100/mo" 
+              />
+              <ToggleCard 
+                active={hasCIPlan} 
+                onToggle={() => setHasCIPlan(!hasCIPlan)}
+                title="Early Critical Illness (Singlife)" 
+                desc="Injects $200k cash upon diagnosis." 
+                cost="$200/mo" 
+              />
             </div>
+
+            {/* Bucket 2 & 3: Wealth */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-medium text-slate-500 uppercase mt-4">Bucket 2 & 3: Wealth Accumulation</h4>
+              
+              <PremiumInput 
+                 label="Endowment (Great Eastern)" 
+                 desc="3.5% yield. Safe bedrock (Purple layer)." 
+                 value={premiumEndowment} 
+                 onChange={(e: any) => setPremiumEndowment(Number(e.target.value))} 
+              />
+              <PremiumInput 
+                 label="100% ILP (Manulife)" 
+                 desc="7.5% yield. Growth engine (Lime layer)." 
+                 value={premiumILP} 
+                 onChange={(e: any) => setPremiumILP(Number(e.target.value))} 
+              />
+            </div>
+
+            {/* Advanced Cabinet */}
+            <div className="pt-4 border-t border-slate-700/50">
+               <button 
+                 onClick={() => setExpandedPill(expandedPill === 'adv' ? null : 'adv')}
+                 className="flex items-center justify-between w-full p-3 bg-slate-800 rounded-lg text-sm text-slate-300 font-medium hover:bg-slate-700 transition-colors"
+               >
+                 Advanced Strategies (High-Net-Worth)
+                 {expandedPill === 'adv' ? <ChevronUp className="w-4 h-4"/> : <ChevronDown className="w-4 h-4"/>}
+               </button>
+
+               {expandedPill === 'adv' && (
+                 <div className="mt-4 space-y-4 p-4 bg-slate-800/30 rounded-xl border border-slate-700/50">
+                    <PremiumInput 
+                       label="Retirement Annuity (NTUC)" 
+                       desc="4.5% yield. Guaranteed payout (Orange layer)." 
+                       value={premiumAnnuity} 
+                       onChange={(e: any) => setPremiumAnnuity(Number(e.target.value))} 
+                    />
+                    <PremiumInput 
+                       label="SRS Index Fund" 
+                       desc="6.0% yield. Tax-optimized (Yellow layer)." 
+                       value={premiumSRS} 
+                       onChange={(e: any) => setPremiumSRS(Number(e.target.value))} 
+                    />
+                 </div>
+               )}
+            </div>
+
           </div>
         </div>
       </div>
@@ -228,6 +278,53 @@ function InputField({ label, name, value, min, max, step, isLogarithmic, onChang
         onChange={handleSliderChange}
         className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-lime-500 hover:accent-lime-400 transition-all duration-300"
       />
+    </div>
+  );
+}
+
+function ToggleCard({ active, onToggle, title, desc, cost }: any) {
+  return (
+    <div 
+      className={`flex items-start justify-between gap-4 cursor-pointer group outline-none rounded-lg p-3 border transition-all duration-300 ${
+        active ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-slate-800 border-slate-700'
+      }`}
+      onClick={onToggle}
+    >
+      <div className="space-y-1">
+        <span className={`text-sm font-medium transition-colors ${active ? 'text-indigo-400' : 'text-slate-300'}`}>
+          {title} <span className="text-slate-500 font-normal">({cost})</span>
+        </span>
+        <p className="text-xs text-slate-500">{desc}</p>
+      </div>
+      <div className={`w-10 h-6 rounded-full flex items-center p-1 shrink-0 transition-colors duration-300 ${
+        active ? 'bg-indigo-500' : 'bg-slate-700 group-hover:bg-slate-600'
+      }`}>
+        <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-300 ${
+          active ? 'translate-x-4' : 'translate-x-0'
+        }`} />
+      </div>
+    </div>
+  );
+}
+
+function PremiumInput({ label, desc, value, onChange }: any) {
+  return (
+    <div className="bg-slate-800 border border-slate-700 rounded-lg p-3">
+      <div className="flex justify-between items-center mb-1">
+        <label className="text-sm font-medium text-slate-300">{label}</label>
+        <div className="flex items-center">
+          <span className="text-slate-500 text-sm mr-2">$</span>
+          <input 
+            type="number" 
+            value={value || ''} 
+            onChange={onChange}
+            placeholder="0"
+            className="w-20 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-right text-slate-100 focus:outline-none focus:border-lime-500 focus:ring-1 focus:ring-lime-500 font-mono text-sm transition-all duration-300"
+          />
+          <span className="text-slate-500 text-xs ml-2">/mo</span>
+        </div>
+      </div>
+      <p className="text-xs text-slate-500">{desc}</p>
     </div>
   );
 }
