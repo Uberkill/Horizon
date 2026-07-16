@@ -3,7 +3,12 @@ import { useStore } from '../store/useStore';
 import { AlertTriangle, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 export function IntakeScreen() {
-  const { clientData, setClientData, isDrawerOpen, setDrawerOpen } = useStore();
+  const { 
+    clientData, setClientData, 
+    isDrawerOpen, setDrawerOpen,
+    portfolioRiskRatio, setPortfolioRiskRatio,
+    hasProtectionPlan, setHasProtectionPlan
+  } = useStore();
   const [warnings, setWarnings] = useState<string[]>([]);
   const [expandedPill, setExpandedPill] = useState<string | null>(null);
 
@@ -116,6 +121,49 @@ export function IntakeScreen() {
           <InputField label="Cash in Bank ($)" name="cash" value={clientData.cash} min={0} max={10000000} isLogarithmic={true} onChange={handleChange} />
           <InputField label="CPF OA Balance ($)" name="cpfOA" value={clientData.cpfOA} min={0} max={10000000} isLogarithmic={true} onChange={handleChange} />
           <InputField label="Total Debt ($)" name="totalDebt" value={clientData.totalDebt} min={0} max={10000000} isLogarithmic={true} onChange={handleChange} />
+          
+          <div className="pt-6 mt-6 border-t border-slate-700/50 space-y-6">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">FA Portfolio Sandbox</h3>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-xs font-medium text-slate-300">
+                <span>Safe (Endowments)</span>
+                <span>Growth (ILPs)</span>
+              </div>
+              <input 
+                type="range" 
+                min={0} max={100} step={1}
+                value={portfolioRiskRatio}
+                onChange={(e) => setPortfolioRiskRatio(Number(e.target.value))}
+                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-lime-500 hover:accent-lime-400 transition-all duration-300"
+              />
+              <div className="flex justify-between items-center text-[10px] text-slate-500">
+                <span>{100 - portfolioRiskRatio}% Allocation</span>
+                <span>{portfolioRiskRatio}% Allocation</span>
+              </div>
+            </div>
+
+            <div 
+              className={`flex items-start justify-between gap-4 cursor-pointer group outline-none rounded-lg p-3 border transition-all duration-300 ${
+                hasProtectionPlan ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-slate-800 border-slate-700'
+              }`}
+              onClick={() => setHasProtectionPlan(!hasProtectionPlan)}
+            >
+              <div className="space-y-1">
+                <span className={`text-sm font-medium transition-colors ${hasProtectionPlan ? 'text-indigo-400' : 'text-slate-300'}`}>
+                  Comprehensive Shield / CI
+                </span>
+                <p className="text-xs text-slate-500">Transfers Medical Emergency risk to insurer (10% of Income).</p>
+              </div>
+              <div className={`w-10 h-6 rounded-full flex items-center p-1 shrink-0 transition-colors duration-300 ${
+                hasProtectionPlan ? 'bg-indigo-500' : 'bg-slate-700 group-hover:bg-slate-600'
+              }`}>
+                <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-300 ${
+                  hasProtectionPlan ? 'translate-x-4' : 'translate-x-0'
+                }`} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </>

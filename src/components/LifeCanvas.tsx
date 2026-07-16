@@ -37,7 +37,7 @@ function CustomScatterNode(props: any) {
 }
 
 export function LifeCanvas() {
-  const { clientData, stressTests, economicData } = useStore();
+  const { clientData, stressTests, economicData, portfolioRiskRatio, hasProtectionPlan } = useStore();
 
   const INFLATION_RATE = stressTests.sustainedInflation 
     ? 0.05 
@@ -47,14 +47,23 @@ export function LifeCanvas() {
   const OPTIMIZED_RETURN = economicData?.optimizedPortfolioReturn ?? 0.065;
 
   const data = [];
-  // True Net Worth Calculation (Subagent Patched)
   let currentBaselineCash = clientData.cash + clientData.cpfOA;
   let currentBaselineDebt = clientData.totalDebt;
   
-  let currentOptimizedCash = clientData.cash + clientData.cpfOA;
-  let currentOptimizedDebt = clientData.totalDebt;
+  let optCash = clientData.cash;
+  let optCPF = clientData.cpfOA;
+  let optEndowment = 0;
+  let optInvestments = 0;
+  let optDebt = clientData.totalDebt;
 
-  const DEBT_INTEREST_RATE = 0.04; // 4% SORA + Spread
+  const DEBT_INTEREST_RATE = 0.04;
+  const YIELD_CASH = 0.01;
+  const YIELD_CPF = 0.025;
+  const YIELD_ENDOWMENT = 0.035;
+  const YIELD_INVESTMENTS = 0.075;
+
+  const ratioEndowment = (100 - portfolioRiskRatio) / 100;
+  const ratioInvestments = portfolioRiskRatio / 100;
 
   for (let year = 0; year <= (85 - clientData.age); year++) {
     const currentAge = clientData.age + year;
@@ -63,91 +72,127 @@ export function LifeCanvas() {
       const inflatedExpenses = (clientData.monthlyExpenses * 12) * Math.pow(1 + INFLATION_RATE, year);
       const inflatedIncome = (clientData.monthlyIncome * 12) * Math.pow(1 + INFLATION_RATE, year);
       
-      let yearSavings = 0;
+      let baseSavings = 0;
+      let optSavings = 0;
+
       if (currentAge < clientData.targetAge) {
-        yearSavings = inflatedIncome - inflatedExpenses;
+        baseSavings = inflatedIncome - inflatedExpenses;
+        optSavings = inflatedIncome - inflatedExpenses;
+        if (hasProtectionPlan) {
+          optSavings -= (inflatedIncome * 0.10); // 10% Protection Premium
+        }
       } else {
-        yearSavings = -inflatedExpenses;
+        baseSavings = -inflatedExpenses;
+        optSavings = -inflatedExpenses;
       }
 
       if (stressTests.medicalEmergency && year === 1) {
-        yearSavings -= 36000;
+        baseSavings -= 150000;
+        if (!hasProtectionPlan) {
+          optSavings -= 150000;
+        }
       }
 
-      // Process Baseline
+      // --- Process Baseline ---
       currentBaselineDebt *= (1 + DEBT_INTEREST_RATE);
-      if (yearSavings >= 0) {
-        // Surplus: Pay down debt first
+      if (baseSavings >= 0) {
         if (currentBaselineDebt > 0) {
-          if (yearSavings >= currentBaselineDebt - 0.01) {
-            yearSavings -= currentBaselineDebt;
+          if (baseSavings >= currentBaselineDebt) {
+            baseSavings -= currentBaselineDebt;
             currentBaselineDebt = 0;
           } else {
-            currentBaselineDebt -= yearSavings;
-            yearSavings = 0;
+            currentBaselineDebt -= baseSavings;
+            baseSavings = 0;
           }
         }
-        currentBaselineCash = (currentBaselineCash * (1 + BASELINE_RETURN)) + yearSavings;
+        currentBaselineCash = (currentBaselineCash * (1 + BASELINE_RETURN)) + baseSavings;
       } else {
-        // Deficit Spiral: Compound first, then drain cash, then increase debt
         currentBaselineCash *= (1 + BASELINE_RETURN);
-        currentBaselineCash += yearSavings; // yearSavings is negative
+        currentBaselineCash += baseSavings;
         if (currentBaselineCash < 0) {
           currentBaselineDebt += Math.abs(currentBaselineCash);
           currentBaselineCash = 0;
         }
       }
 
-      // Process Optimized
-      currentOptimizedDebt *= (1 + DEBT_INTEREST_RATE);
-      let optSavings = yearSavings; // Recalculate original savings for optimized path
-      if (currentAge < clientData.targetAge) {
-        optSavings = inflatedIncome - inflatedExpenses;
-      } else {
-        optSavings = -inflatedExpenses;
-      }
-      if (stressTests.medicalEmergency && year === 1) {
-        optSavings -= 36000;
-      }
-
+      // --- Process Optimized Stack ---
+      optDebt *= (1 + DEBT_INTEREST_RATE);
+      
       if (optSavings >= 0) {
-        if (currentOptimizedDebt > 0) {
-          if (optSavings >= currentOptimizedDebt - 0.01) {
-            optSavings -= currentOptimizedDebt;
-            currentOptimizedDebt = 0;
+        if (optDebt > 0) {
+          if (optSavings >= optDebt) {
+            optSavings -= optDebt;
+            optDebt = 0;
           } else {
-            currentOptimizedDebt -= optSavings;
+            optDebt -= optSavings;
             optSavings = 0;
           }
         }
-        currentOptimizedCash = (currentOptimizedCash * (1 + OPTIMIZED_RETURN)) + optSavings;
+        
+        const cashCap = inflatedExpenses / 2;
+        optCash *= (1 + YIELD_CASH);
+        
+        if (optCash < cashCap) {
+           const cashNeeded = cashCap - optCash;
+           if (optSavings <= cashNeeded) {
+              optCash += optSavings;
+              optSavings = 0;
+           } else {
+              optCash += cashNeeded;
+              optSavings -= cashNeeded;
+           }
+        }
+
+        optEndowment = (optEndowment * (1 + YIELD_ENDOWMENT)) + (optSavings * ratioEndowment);
+        optInvestments = (optInvestments * (1 + YIELD_INVESTMENTS)) + (optSavings * ratioInvestments);
+        optCPF *= (1 + YIELD_CPF);
+
       } else {
-        currentOptimizedCash *= (1 + OPTIMIZED_RETURN);
-        currentOptimizedCash += optSavings;
-        if (currentOptimizedCash < 0) {
-          currentOptimizedDebt += Math.abs(currentOptimizedCash);
-          currentOptimizedCash = 0;
+        optCash *= (1 + YIELD_CASH);
+        optEndowment *= (1 + YIELD_ENDOWMENT);
+        optInvestments *= (1 + YIELD_INVESTMENTS);
+        optCPF *= (1 + YIELD_CPF);
+
+        let deficit = Math.abs(optSavings);
+        
+        if (optCash >= deficit) {
+           optCash -= deficit;
+        } else {
+           deficit -= optCash;
+           optCash = 0;
+           if (optInvestments >= deficit) {
+              optInvestments -= deficit;
+           } else {
+              deficit -= optInvestments;
+              optInvestments = 0;
+              if (optEndowment >= deficit) {
+                 optEndowment -= deficit;
+              } else {
+                 deficit -= optEndowment;
+                 optEndowment = 0;
+                 optDebt += deficit;
+              }
+           }
         }
       }
       
       if (stressTests.covidCrash && year === 1) {
          currentBaselineCash *= 0.70;
-         currentOptimizedCash *= 0.90; 
+         optInvestments *= 0.70;
       }
     }
     
-    // Net worth = Cash - Debt
     let netBaseline = currentBaselineCash - currentBaselineDebt;
-    let netOptimized = currentOptimizedCash - currentOptimizedDebt;
-
-    // Remove artificial floor clamping, allow it to fall to actual depths, but cap extreme runaway debt for render sanity
-    const clampedBaseline = Math.max(-20000000, netBaseline);
-    const clampedOptimized = Math.max(-20000000, netOptimized);
+    let netOptCash = optCash - optDebt;
 
     data.push({
       age: currentAge,
-      baseline: Math.round(clampedBaseline),
-      optimized: Math.round(clampedOptimized)
+      baseline: Math.round(Math.max(-20000000, netBaseline)),
+      optCash: Math.round(netOptCash),
+      optCPF: Math.round(optCPF),
+      optEndowment: Math.round(optEndowment),
+      optInvestments: Math.round(optInvestments),
+      optimized: Math.round(Math.max(-20000000, optCash + optCPF + optEndowment + optInvestments - optDebt))
     });
   }
 
@@ -254,12 +299,42 @@ export function LifeCanvas() {
               
               <Area 
                 type="monotone" 
-                dataKey="optimized" 
-                name="Optimized" 
+                dataKey="optCash" 
+                name="Liquid Cash" 
+                stackId="1"
+                stroke="#0ea5e9" 
+                fill="#0ea5e9" 
+                fillOpacity={0.6}
+                activeDot={false}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="optCPF" 
+                name="CPF Balances" 
+                stackId="1"
+                stroke="#14b8a6" 
+                fill="#14b8a6" 
+                fillOpacity={0.6}
+                activeDot={false}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="optEndowment" 
+                name="Endowments (Safe)" 
+                stackId="1"
+                stroke="#8b5cf6" 
+                fill="#8b5cf6" 
+                fillOpacity={0.6}
+                activeDot={false}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="optInvestments" 
+                name="ILP / Equities (Growth)" 
+                stackId="1"
                 stroke="#a3e635" 
-                strokeWidth={3}
-                fillOpacity={1} 
-                fill="url(#colorOptimized)" 
+                fill="#a3e635" 
+                fillOpacity={0.6}
                 activeDot={{ r: 6, fill: "#a3e635", stroke: "#0f172a", strokeWidth: 2 }}
               />
 
@@ -275,14 +350,26 @@ export function LifeCanvas() {
         </div>
         
         {/* Custom Legend to match image */}
-        <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-8 pointer-events-none">
-          <div className="flex items-center gap-2 bg-slate-900/60 px-4 py-2 rounded-full backdrop-blur-md border border-slate-700/50">
-            <div className="w-3 h-1 bg-rose-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
-            <span className="text-xs text-slate-300 font-medium tracking-wide">Baseline</span>
+        <div className="absolute bottom-6 left-0 right-0 flex justify-center flex-wrap items-center gap-4 px-8 pointer-events-none z-20">
+          <div className="flex items-center gap-2 bg-slate-900/60 px-3 py-1.5 rounded-full backdrop-blur-md border border-slate-700/50">
+            <div className="w-3 h-1 bg-rose-500 rounded-full" />
+            <span className="text-[10px] text-slate-300 font-medium">Unprotected Baseline</span>
           </div>
-          <div className="flex items-center gap-2 bg-slate-900/60 px-4 py-2 rounded-full backdrop-blur-md border border-slate-700/50">
-            <div className="w-3 h-1 bg-lime-400 rounded-full shadow-[0_0_8px_rgba(163,230,53,0.5)]" />
-            <span className="text-xs text-slate-300 font-medium tracking-wide">Optimized</span>
+          <div className="flex items-center gap-2 bg-slate-900/60 px-3 py-1.5 rounded-full backdrop-blur-md border border-slate-700/50">
+            <div className="w-2 h-2 bg-[#0ea5e9] rounded-full" />
+            <span className="text-[10px] text-slate-300 font-medium">Cash</span>
+          </div>
+          <div className="flex items-center gap-2 bg-slate-900/60 px-3 py-1.5 rounded-full backdrop-blur-md border border-slate-700/50">
+            <div className="w-2 h-2 bg-[#14b8a6] rounded-full" />
+            <span className="text-[10px] text-slate-300 font-medium">CPF</span>
+          </div>
+          <div className="flex items-center gap-2 bg-slate-900/60 px-3 py-1.5 rounded-full backdrop-blur-md border border-slate-700/50">
+            <div className="w-2 h-2 bg-[#8b5cf6] rounded-full" />
+            <span className="text-[10px] text-slate-300 font-medium">Endowments</span>
+          </div>
+          <div className="flex items-center gap-2 bg-slate-900/60 px-3 py-1.5 rounded-full backdrop-blur-md border border-slate-700/50">
+            <div className="w-2 h-2 bg-[#a3e635] rounded-full" />
+            <span className="text-[10px] text-slate-300 font-medium">Investments</span>
           </div>
         </div>
       </div>

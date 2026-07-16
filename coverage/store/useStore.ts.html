@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">37.5% </span>
+                <span class="strong">33.33% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>6/16</span>
+                <span class='fraction'>6/18</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">44.44% </span>
+                <span class="strong">36.36% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>4/9</span>
+                <span class='fraction'>4/11</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">30.76% </span>
+                <span class="strong">26.66% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>4/13</span>
+                <span class='fraction'>4/15</span>
             </div>
         
             
@@ -167,7 +167,27 @@
 <a name='L102'></a><a href='#L102'>102</a>
 <a name='L103'></a><a href='#L103'>103</a>
 <a name='L104'></a><a href='#L104'>104</a>
-<a name='L105'></a><a href='#L105'>105</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -235,12 +255,20 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -298,6 +326,12 @@ interface AppState {
   };
   toggleStressTest: (test: keyof AppState['stressTests']) =&gt; void;
 &nbsp;
+  portfolioRiskRatio: number; // 0 (100% Endowment) to 100 (100% ILP)
+  setPortfolioRiskRatio: (ratio: number) =&gt; void;
+  
+  hasProtectionPlan: boolean;
+  setHasProtectionPlan: (hasPlan: boolean) =&gt; void;
+&nbsp;
   // New API and Macro/Micro State
   viewMode: 'macro' | 'micro';
   setViewMode: (mode: 'macro' | 'micro') =&gt; void;
@@ -329,7 +363,9 @@ export const useStore = create&lt;AppState&gt;((set) =&gt; ({
     
 <span class="fstat-no" title="function not covered" >  resetClient: () =&gt; <span class="cstat-no" title="statement not covered" >s</span>et({ </span>
     clientData: { ...initialClientData },
-    stressTests: { covidCrash: false, sustainedInflation: false, medicalEmergency: false }
+    stressTests: { covidCrash: false, sustainedInflation: false, medicalEmergency: false },
+    portfolioRiskRatio: 60,
+    hasProtectionPlan: false
   }),
   
   stressTests: {
@@ -345,6 +381,12 @@ export const useStore = create&lt;AppState&gt;((set) =&gt; ({
         [test]: !state.stressTests[test]
       }
     })),
+&nbsp;
+  portfolioRiskRatio: 60,
+<span class="fstat-no" title="function not covered" >  setPortfolioRiskRatio: (r</span>atio) =&gt; <span class="cstat-no" title="statement not covered" >set({ portfolioRiskRatio: ratio }),</span>
+  
+  hasProtectionPlan: false,
+<span class="fstat-no" title="function not covered" >  setHasProtectionPlan: (h</span>asPlan) =&gt; <span class="cstat-no" title="statement not covered" >set({ hasProtectionPlan: hasPlan }),</span>
 &nbsp;
   viewMode: 'micro', // default to client pitch view
   setViewMode: (mode) =&gt; set({ viewMode: mode }),
@@ -382,7 +424,7 @@ export const useStore = create&lt;AppState&gt;((set) =&gt; ({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-16T06:29:16.843Z
+                at 2026-07-16T07:00:05.552Z
             </div>
         <script src="../prettify.js"></script>
         <script>

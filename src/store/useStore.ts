@@ -25,6 +25,12 @@ interface AppState {
   };
   toggleStressTest: (test: keyof AppState['stressTests']) => void;
 
+  portfolioRiskRatio: number; // 0 (100% Endowment) to 100 (100% ILP)
+  setPortfolioRiskRatio: (ratio: number) => void;
+  
+  hasProtectionPlan: boolean;
+  setHasProtectionPlan: (hasPlan: boolean) => void;
+
   // New API and Macro/Micro State
   viewMode: 'macro' | 'micro';
   setViewMode: (mode: 'macro' | 'micro') => void;
@@ -56,7 +62,9 @@ export const useStore = create<AppState>((set) => ({
     
   resetClient: () => set({ 
     clientData: { ...initialClientData },
-    stressTests: { covidCrash: false, sustainedInflation: false, medicalEmergency: false }
+    stressTests: { covidCrash: false, sustainedInflation: false, medicalEmergency: false },
+    portfolioRiskRatio: 60,
+    hasProtectionPlan: false
   }),
   
   stressTests: {
@@ -72,6 +80,12 @@ export const useStore = create<AppState>((set) => ({
         [test]: !state.stressTests[test]
       }
     })),
+
+  portfolioRiskRatio: 60,
+  setPortfolioRiskRatio: (ratio) => set({ portfolioRiskRatio: ratio }),
+  
+  hasProtectionPlan: false,
+  setHasProtectionPlan: (hasPlan) => set({ hasProtectionPlan: hasPlan }),
 
   viewMode: 'micro', // default to client pitch view
   setViewMode: (mode) => set({ viewMode: mode }),
