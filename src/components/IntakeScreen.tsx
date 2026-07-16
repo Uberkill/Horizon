@@ -222,6 +222,14 @@ export function IntakeScreen() {
 
 function InputField({ label, name, value, min, max, step, isLogarithmic, onChange }: any) {
   const POWER = 4;
+  const [localValue, setLocalValue] = React.useState(value);
+  const throttleTimeout = React.useRef<NodeJS.Timeout | null>(null);
+  const lastCall = React.useRef(0);
+
+  // Sync external changes (e.g. initial load or resets)
+  React.useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
   
   // Dynamic rounding for clean visual numbers
   const roundValue = (val: number) => {
@@ -234,15 +242,43 @@ function InputField({ label, name, value, min, max, step, isLogarithmic, onChang
   };
 
   const getSliderPosition = () => {
-    if (!isLogarithmic) return value;
-    if (value <= min) return 0;
-    if (value >= max) return 100;
-    return Math.pow((value - min) / (max - min), 1 / POWER) * 100;
+    if (!isLogarithmic) return localValue;
+    if (localValue <= min) return 0;
+    if (localValue >= max) return 100;
+    return Math.pow((localValue - min) / (max - min), 1 / POWER) * 100;
+  };
+
+  const commitChange = (valToCommit: number, originalEvent?: React.ChangeEvent<HTMLInputElement>) => {
+    const now = Date.now();
+    if (now - lastCall.current >= 50) {
+      if (originalEvent && !isLogarithmic) {
+        onChange(originalEvent);
+      } else {
+        onChange({
+          target: { name, value: String(valToCommit) }
+        } as React.ChangeEvent<HTMLInputElement>);
+      }
+      lastCall.current = now;
+    } else {
+      if (throttleTimeout.current) clearTimeout(throttleTimeout.current);
+      throttleTimeout.current = setTimeout(() => {
+        if (originalEvent && !isLogarithmic) {
+          onChange(originalEvent);
+        } else {
+          onChange({
+            target: { name, value: String(valToCommit) }
+          } as React.ChangeEvent<HTMLInputElement>);
+        }
+        lastCall.current = Date.now();
+      }, 50);
+    }
   };
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isLogarithmic) {
-      onChange(e);
+      const val = Number(e.target.value);
+      setLocalValue(val);
+      commitChange(val, e);
       return;
     }
     
@@ -250,10 +286,8 @@ function InputField({ label, name, value, min, max, step, isLogarithmic, onChang
     let calculated = min + (max - min) * Math.pow(pos / 100, POWER);
     calculated = roundValue(calculated);
     
-    // Simulate standard event
-    onChange({
-      target: { name, value: String(calculated) }
-    } as React.ChangeEvent<HTMLInputElement>);
+    setLocalValue(calculated);
+    commitChange(calculated);
   };
 
   return (
@@ -263,8 +297,11 @@ function InputField({ label, name, value, min, max, step, isLogarithmic, onChang
         <input 
           type="number" 
           name={name}
-          value={value} 
-          onChange={onChange}
+          value={localValue} 
+          onChange={(e) => {
+            setLocalValue(Number(e.target.value));
+            commitChange(Number(e.target.value), e);
+          }}
           className="w-28 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-right text-slate-100 focus:outline-none focus:border-lime-500 focus:ring-1 focus:ring-lime-500 font-mono text-sm transition-all duration-300"
         />
       </div>

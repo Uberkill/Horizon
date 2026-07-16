@@ -1,5 +1,5 @@
 import { useStore } from '../store/useStore';
-import { calculateWealthTrajectory, ProductPortfolio } from '../utils/mathEngine';
+import { calculateWealthTrajectory, type ProductPortfolio } from '../utils/mathEngine';
 import {
   ComposedChart,
   Area,
@@ -37,6 +37,60 @@ function CustomScatterNode(props: any) {
   );
 }
 
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const optimized = data.optimized;
+    const baseline = data.baseline;
+    
+    return (
+      <div className="bg-slate-900/95 border border-slate-700/50 rounded-xl p-4 shadow-2xl backdrop-blur-xl w-64 max-h-64 overflow-y-auto z-50">
+        <p className="text-slate-400 text-xs font-medium mb-1">Age {label}</p>
+        
+        <div className="mb-4">
+          <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Total Projected Wealth</p>
+          <p className="text-2xl font-bold text-lime-400 font-mono tracking-tight">{formatCurrency(optimized)}</p>
+          
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-700/50">
+            <p className="text-[10px] text-slate-500 uppercase tracking-wider">Unprotected Baseline</p>
+            <p className="text-sm font-semibold text-rose-400 font-mono">{formatCurrency(baseline)}</p>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+           {payload.map((entry: any, index: number) => {
+              if (Math.abs(entry.value) === 0 || entry.dataKey === 'baseline') return null;
+              
+              // Debt should visually show as negative, but we use absolute value for formatting
+              const isDebt = entry.dataKey === 'optDebtDisplay';
+              
+              return (
+                 <div key={index} className="flex justify-between items-center text-sm">
+                   <div className="flex items-center gap-2">
+                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                     <span className="text-slate-300 text-xs">{entry.name}</span>
+                   </div>
+                   <span className="font-mono text-slate-100 text-xs">
+                     {isDebt ? '-' : ''}{formatCurrency(Math.abs(entry.value))}
+                   </span>
+                 </div>
+              )
+           })}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function LifeCanvas() {
   const { 
     clientData, stressTests, economicData, 
@@ -67,15 +121,6 @@ export function LifeCanvas() {
   const travelAge = clientData.targetAge + 5;
   const travelData = data.find(d => d.age === travelAge);
   if (travelData) milestones.push({ age: travelData.age, optimized: travelData.optimized, label: 'Travel Goal' });
-
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
 
   const formatYAxis = (value: number) => {
     if (Math.abs(value) >= 1000000) {
@@ -133,17 +178,8 @@ export function LifeCanvas() {
                 tickMargin={12}
               />
               <Tooltip 
-                formatter={(value: any) => formatCurrency(Number(value))}
-                labelFormatter={(label) => `Age ${label}`}
-                contentStyle={{ 
-                  backgroundColor: 'rgba(15, 23, 42, 0.9)', 
-                  border: '1px solid rgba(51, 65, 85, 0.5)', 
-                  borderRadius: '12px',
-                  backdropFilter: 'blur(12px)',
-                  color: '#f8fafc',
-                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)'
-                }}
-                itemStyle={{ fontWeight: 500 }}
+                content={<CustomTooltip />}
+                allowEscapeViewBox={{ x: true, y: true }}
               />
               
               <Line 
