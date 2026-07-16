@@ -53,12 +53,12 @@ export function IntakeScreen() {
       >
         <div className="flex items-center justify-between p-6 border-b border-slate-700/50 bg-slate-800/30">
           <div>
-            <h2 className="text-xl font-semibold text-slate-100">Client Configuration</h2>
+            <h2 className="text-lg font-medium text-slate-300">Client Configuration</h2>
             <p className="text-slate-400 text-xs mt-1">Adjust metrics to update the Life Canvas.</p>
           </div>
           <button 
             onClick={() => setDrawerOpen(false)}
-            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors border border-slate-700"
+            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors duration-300 border border-slate-700"
           >
             <X className="w-5 h-5" />
           </button>
@@ -92,7 +92,7 @@ export function IntakeScreen() {
                         setClientData({ monthlyExpenses: style.amount });
                         setExpandedPill(isActive && expandedPill === style.id ? null : style.id);
                       }}
-                      className={`flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
+                      className={`flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition-all duration-300 ${
                         isActive 
                           ? 'bg-lime-500/20 border-lime-500/50 text-lime-400' 
                           : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
@@ -132,7 +132,7 @@ function InputField({ label, name, value, min, max, step, onChange }: any) {
           name={name}
           value={value} 
           onChange={onChange}
-          className="w-28 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-right text-slate-100 focus:outline-none focus:border-lime-500 focus:ring-1 focus:ring-lime-500 font-mono text-sm transition-all"
+          className="w-28 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-right text-slate-100 focus:outline-none focus:border-lime-500 focus:ring-1 focus:ring-lime-500 font-mono text-sm transition-all duration-300"
         />
       </div>
       <input 
@@ -143,7 +143,7 @@ function InputField({ label, name, value, min, max, step, onChange }: any) {
         step={step}
         value={value} 
         onChange={onChange}
-        className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-lime-500 hover:accent-lime-400 transition-all"
+        className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-lime-500 hover:accent-lime-400 transition-all duration-300"
       />
     </div>
   );

@@ -113,7 +113,7 @@ export function MacroView() {
       {/* 12-Module Sidebar */}
       <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-2 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden pb-12 pr-2">
         <div className="mb-2">
-          <h2 className="text-xl font-semibold text-slate-100 tracking-tight">Intelligence Arsenal</h2>
+          <h2 className="text-sm font-medium uppercase tracking-wider text-slate-400">Intelligence Arsenal</h2>
         </div>
 
         {Object.entries(MODULES).map(([category, items]) => (
@@ -121,7 +121,7 @@ export function MacroView() {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 pl-2">
               {category.replace('economic', 'Economic Threats').replace('lifestyle', 'Lifestyle & Aspiration').replace('demographic', 'Demographic Destiny')}
             </h3>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               {items.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -129,7 +129,7 @@ export function MacroView() {
                   <button 
                     key={item.id}
                     onClick={() => setActiveTab(item.id as TabKey)}
-                    className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all text-left ${isActive ? 'bg-slate-800 border-slate-600 shadow-md' : 'bg-transparent border-transparent hover:bg-slate-800/40'}`}
+                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-300 text-left ${isActive ? 'bg-slate-800 border-slate-600 shadow-md' : 'bg-transparent border-transparent hover:bg-slate-800/40'}`}
                   >
                     <div className={`p-1.5 rounded-lg ${isActive ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-400'}`}>
                       <Icon className="w-4 h-4" />
@@ -169,7 +169,7 @@ export function MacroView() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setVerifierOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-colors border border-emerald-500/20 text-xs font-medium"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-colors duration-300 border border-emerald-500/20 text-xs font-medium"
             >
               <ShieldCheck className="w-4 h-4" />
               Verify Source
@@ -181,7 +181,7 @@ export function MacroView() {
                   <button
                     key={t}
                     onClick={() => setTimeframe(t as any)}
-                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors duration-300 ${
                       timeframe === t ? 'bg-slate-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
                     }`}
                   >
@@ -253,7 +253,7 @@ export function MacroView() {
           <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-md w-full p-6 relative animate-in zoom-in-95 duration-200">
             <button 
               onClick={() => setVerifierOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+              className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors duration-300"
             >
               <X className="w-5 h-5" />
             </button>

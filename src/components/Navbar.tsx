@@ -49,7 +49,7 @@ export function Navbar() {
         {viewMode === 'micro' && (
           <button 
             onClick={() => setDrawerOpen(!isDrawerOpen)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white transition-all text-sm font-medium border border-slate-700/80 shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white transition-all duration-300 text-sm font-medium border border-slate-700/80 shadow-sm"
           >
             <Settings className="w-4 h-4" />
             Configure Client
@@ -57,7 +57,7 @@ export function Navbar() {
         )}
         <button 
           onClick={handleReset}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800/80 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 transition-all text-sm font-medium border border-slate-700/80 hover:border-rose-500/30 shadow-sm"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800/80 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 transition-all duration-300 text-sm font-medium border border-slate-700/80 hover:border-rose-500/30 shadow-sm"
         >
           <RotateCcw className="w-4 h-4" />
           Reset

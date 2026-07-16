@@ -35,7 +35,7 @@ export function Widgets() {
           <div className="w-8 h-8 rounded-lg bg-lime-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(132,204,22,0.15)]">
             <ShieldAlert className="w-4 h-4 text-lime-400" />
           </div>
-          <h3 className="text-xl font-medium text-slate-100 tracking-wide">Stress Tests</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Stress Tests</h3>
         </div>
         
         <div className="space-y-6">
@@ -65,7 +65,7 @@ export function Widgets() {
           <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.15)]">
             <Gauge className="w-4 h-4 text-blue-400" />
           </div>
-          <h3 className="text-xl font-medium text-slate-100 tracking-wide">Peer Benchmark</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Peer Benchmark</h3>
         </div>
         
         {showDebtMode ? (
@@ -123,7 +123,7 @@ function StressToggle({ active, onClick, title, description }: { active: boolean
 
   return (
     <div 
-      className="flex items-start justify-between gap-4 cursor-pointer group outline-none focus-visible:ring-2 focus-visible:ring-lime-500 rounded-lg p-1 -m-1 transition-all" 
+      className="flex items-start justify-between gap-4 cursor-pointer group outline-none focus-visible:ring-2 focus-visible:ring-lime-500 rounded-lg p-1 -m-1 transition-all duration-300" 
       onClick={onClick}
       role="switch"
       aria-checked={active}
