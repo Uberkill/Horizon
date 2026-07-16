@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
+import { MACRO_NARRATIVES } from '../constants/narratives';
 import { 
   TrendingDown, Home, Briefcase, Activity, 
   ShoppingCart, Landmark, Car, Baby, HeartPulse, 
@@ -154,9 +155,15 @@ export function MacroView() {
             <h3 className="text-2xl font-semibold text-slate-100 tracking-wide">
               {MODULES.economic.concat(MODULES.lifestyle, MODULES.demographic).find(m => m.id === activeTab)?.label}
             </h3>
-            <p className="text-slate-400 text-sm">
+            <p className="text-slate-400 text-sm mb-3">
               {MODULES.economic.concat(MODULES.lifestyle, MODULES.demographic).find(m => m.id === activeTab)?.sub}
             </p>
+            {/* Consultant Context Box */}
+            <div className="bg-slate-800/50 border border-slate-700/50 p-3 rounded-xl max-w-2xl backdrop-blur-md">
+              <p className="text-sm text-slate-300 leading-relaxed italic">
+                "{MACRO_NARRATIVES[MODULES.economic.concat(MODULES.lifestyle, MODULES.demographic).find(m => m.id === activeTab)?.label || '']}"
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">

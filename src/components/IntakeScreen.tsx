@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 export function IntakeScreen() {
   const { clientData, setClientData, isDrawerOpen, setDrawerOpen } = useStore();
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [expandedPill, setExpandedPill] = useState<string | null>(null);
+
+  const LIFESTYLES = [
+    { id: 'basic', label: 'Basic Survival', amount: 2000, context: "Solo, Paid HDB, Public Transport" },
+    { id: 'middle', label: 'Middle-Class Comfort', amount: 5000, context: "Married, Dining Out, Shield Plans" },
+    { id: 'luxury', label: 'Luxury Horizon', amount: 10000, context: "Private Healthcare, Car, Travel" }
+  ];
 
   useEffect(() => {
     const newWarnings: string[] = [];
@@ -70,7 +77,40 @@ export function IntakeScreen() {
           <InputField label="Current Age" name="age" value={clientData.age} min={18} max={80} step={1} onChange={handleChange} />
           <InputField label="Target Retirement Age" name="targetAge" value={clientData.targetAge} min={clientData.age + 1} max={90} step={1} onChange={handleChange} />
           <InputField label="Monthly Income ($)" name="monthlyIncome" value={clientData.monthlyIncome} min={0} max={200000} step={500} onChange={handleChange} />
-          <InputField label="Monthly Expenses ($)" name="monthlyExpenses" value={clientData.monthlyExpenses} min={0} max={200000} step={500} onChange={handleChange} />
+          
+          <div className="space-y-3 pt-2">
+            <label className="text-sm font-medium text-slate-300">Retirement Lifestyle (Today's Value)</label>
+            <div className="flex flex-wrap gap-2">
+              {LIFESTYLES.map((style) => {
+                const isActive = clientData.monthlyExpenses === style.amount;
+                return (
+                  <div key={style.id} className="flex flex-col w-full">
+                    <button
+                      onClick={() => {
+                        setClientData({ monthlyExpenses: style.amount });
+                        setExpandedPill(isActive && expandedPill === style.id ? null : style.id);
+                      }}
+                      className={`flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
+                        isActive 
+                          ? 'bg-lime-500/20 border-lime-500/50 text-lime-400' 
+                          : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <span>{style.label} (${style.amount})</span>
+                      {expandedPill === style.id ? <ChevronUp className="w-3 h-3 ml-2" /> : <ChevronDown className="w-3 h-3 ml-2" />}
+                    </button>
+                    {expandedPill === style.id && (
+                      <div className="mt-1 p-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-[10px] text-slate-400 italic">
+                        {style.context}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <InputField label="Monthly Expenses ($)" name="monthlyExpenses" value={clientData.monthlyExpenses} min={0} max={200000} step={500} onChange={handleChange} />
+          </div>
+
           <InputField label="Cash in Bank ($)" name="cash" value={clientData.cash} min={0} max={10000000} step={10000} onChange={handleChange} />
           <InputField label="CPF OA Balance ($)" name="cpfOA" value={clientData.cpfOA} min={0} max={10000000} step={10000} onChange={handleChange} />
           <InputField label="Total Debt ($)" name="totalDebt" value={clientData.totalDebt} min={0} max={10000000} step={10000} onChange={handleChange} />
