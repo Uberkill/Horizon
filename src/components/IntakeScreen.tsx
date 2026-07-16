@@ -78,7 +78,7 @@ export function IntakeScreen() {
 
           <InputField label="Current Age" name="age" value={clientData.age} min={18} max={80} step={1} onChange={handleChange} />
           <InputField label="Target Retirement Age" name="targetAge" value={clientData.targetAge} min={clientData.age + 1} max={90} step={1} onChange={handleChange} />
-          <InputField label="Monthly Income ($)" name="monthlyIncome" value={clientData.monthlyIncome} min={0} max={200000} step={500} onChange={handleChange} />
+          <InputField label="Monthly Income ($)" name="monthlyIncome" value={clientData.monthlyIncome} min={0} max={200000} isLogarithmic={true} onChange={handleChange} />
           
           <div className="space-y-3 pt-2">
             <label className="text-sm font-medium text-slate-300">Retirement Lifestyle (Today's Value)</label>
@@ -110,19 +110,54 @@ export function IntakeScreen() {
                 );
               })}
             </div>
-            <InputField label="Monthly Expenses ($)" name="monthlyExpenses" value={clientData.monthlyExpenses} min={0} max={200000} step={500} onChange={handleChange} />
+            <InputField label="Monthly Expenses ($)" name="monthlyExpenses" value={clientData.monthlyExpenses} min={0} max={200000} isLogarithmic={true} onChange={handleChange} />
           </div>
 
-          <InputField label="Cash in Bank ($)" name="cash" value={clientData.cash} min={0} max={10000000} step={10000} onChange={handleChange} />
-          <InputField label="CPF OA Balance ($)" name="cpfOA" value={clientData.cpfOA} min={0} max={10000000} step={10000} onChange={handleChange} />
-          <InputField label="Total Debt ($)" name="totalDebt" value={clientData.totalDebt} min={0} max={10000000} step={10000} onChange={handleChange} />
+          <InputField label="Cash in Bank ($)" name="cash" value={clientData.cash} min={0} max={10000000} isLogarithmic={true} onChange={handleChange} />
+          <InputField label="CPF OA Balance ($)" name="cpfOA" value={clientData.cpfOA} min={0} max={10000000} isLogarithmic={true} onChange={handleChange} />
+          <InputField label="Total Debt ($)" name="totalDebt" value={clientData.totalDebt} min={0} max={10000000} isLogarithmic={true} onChange={handleChange} />
         </div>
       </div>
     </>
   );
 }
 
-function InputField({ label, name, value, min, max, step, onChange }: any) {
+function InputField({ label, name, value, min, max, step, isLogarithmic, onChange }: any) {
+  const POWER = 4;
+  
+  // Dynamic rounding for clean visual numbers
+  const roundValue = (val: number) => {
+    if (val === 0) return 0;
+    if (val < 1000) return Math.round(val / 100) * 100;
+    if (val < 10000) return Math.round(val / 500) * 500;
+    if (val < 100000) return Math.round(val / 1000) * 1000;
+    if (val < 1000000) return Math.round(val / 10000) * 10000;
+    return Math.round(val / 50000) * 50000;
+  };
+
+  const getSliderPosition = () => {
+    if (!isLogarithmic) return value;
+    if (value <= min) return 0;
+    if (value >= max) return 100;
+    return Math.pow((value - min) / (max - min), 1 / POWER) * 100;
+  };
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isLogarithmic) {
+      onChange(e);
+      return;
+    }
+    
+    const pos = Number(e.target.value);
+    let calculated = min + (max - min) * Math.pow(pos / 100, POWER);
+    calculated = roundValue(calculated);
+    
+    // Simulate standard event
+    onChange({
+      target: { name, value: String(calculated) }
+    } as React.ChangeEvent<HTMLInputElement>);
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
@@ -138,11 +173,11 @@ function InputField({ label, name, value, min, max, step, onChange }: any) {
       <input 
         type="range" 
         name={name}
-        min={min} 
-        max={max} 
-        step={step}
-        value={value} 
-        onChange={onChange}
+        min={isLogarithmic ? 0 : min} 
+        max={isLogarithmic ? 100 : max} 
+        step={isLogarithmic ? 0.1 : step}
+        value={getSliderPosition()} 
+        onChange={handleSliderChange}
         className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-lime-500 hover:accent-lime-400 transition-all duration-300"
       />
     </div>
