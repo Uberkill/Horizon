@@ -4,7 +4,7 @@ import { ShieldAlert, Gauge, HeartHandshake } from 'lucide-react';
 import React from 'react';
 
 export function Widgets() {
-  const { clientData, stressTests, toggleStressTest, economicData } = useStore();
+  const { clientData, stressTests, toggleStressTest, economicData, dispatchHUDEvent, hasShieldPlan } = useStore();
 
   const netCashFlow = clientData.monthlyIncome - clientData.monthlyExpenses;
   const isInMassiveDebt = clientData.totalDebt > (clientData.monthlyIncome * 36);
@@ -28,6 +28,25 @@ export function Widgets() {
   }
   percentile = Math.round(percentile);
 
+  const handleStressToggle = (test: 'covidCrash' | 'sustainedInflation' | 'medicalEmergency') => {
+    toggleStressTest(test);
+    
+    // If we are turning it ON
+    if (!stressTests[test]) {
+      if (test === 'medicalEmergency') {
+        if (hasShieldPlan) {
+          dispatchHUDEvent({ type: 'absorbed', message: 'Medical Emergency: Fully Covered', severity: 'normal' });
+        } else {
+          dispatchHUDEvent({ type: 'hit', message: '-$36,000 Medical Debt', severity: 'critical' });
+        }
+      } else if (test === 'covidCrash') {
+        dispatchHUDEvent({ type: 'hit', message: '-30% Market Crash', severity: 'critical' });
+      } else if (test === 'sustainedInflation') {
+        dispatchHUDEvent({ type: 'hit', message: '5% Sustained Inflation', severity: 'critical' });
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="bg-slate-900/40 p-6 lg:p-8 rounded-[2rem] border border-slate-700/50 shadow-2xl backdrop-blur-3xl">
@@ -41,19 +60,19 @@ export function Widgets() {
         <div className="space-y-6">
           <StressToggle 
             active={stressTests.covidCrash}
-            onClick={() => toggleStressTest('covidCrash')}
+            onClick={() => handleStressToggle('covidCrash')}
             title="Market Crash"
             description="Simulates a 30% portfolio drop"
           />
           <StressToggle 
             active={stressTests.sustainedInflation}
-            onClick={() => toggleStressTest('sustainedInflation')}
+            onClick={() => handleStressToggle('sustainedInflation')}
             title="Inflation"
             description="Overrides inflation to 5% p.a."
           />
           <StressToggle 
             active={stressTests.medicalEmergency}
-            onClick={() => toggleStressTest('medicalEmergency')}
+            onClick={() => handleStressToggle('medicalEmergency')}
             title="Medical Emergency"
             description="$3,000/mo extra expenses for 1yr"
           />

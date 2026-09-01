@@ -38,6 +38,19 @@ describe('useStore', () => {
     expect(state.clientData.monthlyExpenses).toBe(5000);
   });
 
+  it('should coerce NaN and negative inputs when setting client data', () => {
+    useStore.getState().setClientData({
+      age: NaN,
+      monthlyIncome: -5000, // Invalid
+      cash: NaN
+    });
+    const state = useStore.getState();
+    // Default fallback for age is 30, for money is 0
+    expect(state.clientData.age).toBe(30);
+    expect(state.clientData.monthlyIncome).toBe(0);
+    expect(state.clientData.cash).toBe(0);
+  });
+
   it('should toggle stress tests', () => {
     expect(useStore.getState().stressTests.covidCrash).toBe(false);
     
@@ -114,5 +127,29 @@ describe('useStore', () => {
     
     expect(consoleSpy).toHaveBeenCalledWith("Failed to fetch API data", expect.any(Error));
     consoleSpy.mockRestore();
+  });
+
+  it('should dispatch and remove HUD events with max concurrency of 3', () => {
+    const store = useStore.getState();
+    
+    store.dispatchHUDEvent({ type: 'hit', message: 'First', severity: 'normal' });
+    store.dispatchHUDEvent({ type: 'hit', message: 'Second', severity: 'normal' });
+    store.dispatchHUDEvent({ type: 'hit', message: 'Third', severity: 'normal' });
+    store.dispatchHUDEvent({ type: 'hit', message: 'Fourth', severity: 'normal' });
+    
+    const queueAfterFour = useStore.getState().hudQueue;
+    
+    // Strict concurrency: only keeps the last 3 events
+    expect(queueAfterFour.length).toBe(3);
+    expect(queueAfterFour[0].message).toBe('Second');
+    expect(queueAfterFour[2].message).toBe('Fourth');
+    
+    // Test remove
+    const idToRemove = queueAfterFour[1].id; // "Third"
+    useStore.getState().removeHUDEvent(idToRemove);
+    
+    const queueAfterRemove = useStore.getState().hudQueue;
+    expect(queueAfterRemove.length).toBe(2);
+    expect(queueAfterRemove.find(e => e.id === idToRemove)).toBeUndefined();
   });
 });

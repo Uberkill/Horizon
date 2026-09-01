@@ -1,1 +1,40 @@
 @import "tailwindcss";
+
+/* Global Scrollbar Customization for Dark Theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155; /* tailwind slate-700 */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569; /* tailwind slate-600 */
+}
+
+/* Print CSS */
+@media print {
+  /* Hide UI elements not meant for print */
+  nav, .print\:hidden {
+    display: none !important;
+  }
+  
+  /* Reset body colors for ink saving */
+  body, html {
+    background: white !important;
+    color: black !important;
+  }
+  
+  /* Ensure the background doesn't bleed through in print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

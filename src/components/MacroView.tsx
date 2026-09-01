@@ -99,9 +99,19 @@ export function MacroView() {
 
   const getSourceDetails = () => {
     switch(activeTab) {
+      case 'wealth': return { source: 'Monetary Authority of Singapore (MAS)', id: 'MAS_CORE_INFLATION', url: 'https://www.mas.gov.sg/statistics/consumer-price-developments' };
+      case 'food': return { source: 'Singapore Department of Statistics (SingStat)', id: 'SINGSTAT_CPI_FOOD', url: 'https://tablebuilder.singstat.gov.sg/table/TS/M212881' };
       case 'debt': return { source: 'Monetary Authority of Singapore (MAS)', id: 'MAS_SORA_HISTORICAL', url: 'https://eservices.mas.gov.sg/statistics/dir/DomesticInterestRates.aspx' };
-      case 'coe': return { source: 'Data.gov.sg (LTA)', id: 'LTA_COE_PREMIUMS', url: 'https://data.gov.sg/datasets/d_b41b9d4530fc9bd1119b4cfb2c28641b/view' };
-      default: return { source: 'Singapore Department of Statistics (SingStat)', id: `SINGSTAT_${activeTab.toUpperCase()}`, url: 'https://tablebuilder.singstat.gov.sg/' };
+      case 'housing': return { source: 'Housing & Development Board (HDB)', id: 'HDB_RESALE_PRICE_INDEX', url: 'https://www.hdb.gov.sg/residential/selling-a-flat/overview/resale-statistics' };
+      case 'coe': return { source: 'Data.gov.sg (LTA)', id: 'LTA_COE_PREMIUMS', url: 'https://data.gov.sg/datasets/d_69b3380ad7e51aff3a7dcc84eba52b8a/view' };
+      case 'childcare': return { source: 'Data.gov.sg (ECDA)', id: 'ECDA_FEE_STATISTICS', url: 'https://data.gov.sg/datasets/d_44cfe12f2858ae503a093dfc075a28be/view' };
+      case 'wages': return { source: 'Ministry of Manpower (MOM)', id: 'MOM_INCOME_STATISTICS', url: 'https://stats.mom.gov.sg/Pages/Income-Summary-Table.aspx' };
+      case 'medical': return { source: 'Singapore Department of Statistics (SingStat)', id: 'SINGSTAT_CPI_HEALTHCARE', url: 'https://tablebuilder.singstat.gov.sg/table/TS/M212881' };
+      case 'longevity': return { source: 'Singapore Department of Statistics (SingStat)', id: 'SINGSTAT_LIFE_EXPECTANCY', url: 'https://tablebuilder.singstat.gov.sg/table/TS/M810501' };
+      case 'education': return { source: 'Ministry of Education (MOE)', id: 'MOE_UNIVERSITY_FEES', url: 'https://www.moe.gov.sg/post-secondary/autonomous-universities' };
+      case 'taxbase': return { source: 'Singapore Department of Statistics (SingStat)', id: 'SINGSTAT_OLD_AGE_SUPPORT', url: 'https://tablebuilder.singstat.gov.sg/table/TS/M810361' };
+      case 'frs': return { source: 'Central Provident Fund Board (CPF)', id: 'CPFB_RETIREMENT_SUM', url: 'https://www.cpf.gov.sg/member/faq/retirement-income/retirement-accounts/what-are-the-retirement-sums---basic-retirement-sum--brs---full-retiremen' };
+      default: return { source: 'Singapore Department of Statistics (SingStat)', id: `SINGSTAT_DEFAULT`, url: 'https://tablebuilder.singstat.gov.sg/' };
     }
   };
 
@@ -202,7 +212,7 @@ export function MacroView() {
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               {config.type === 'area' ? (
-                <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={data} margin={{ top: 10, right: 10, left: 40, bottom: 0 }}>
                   <defs>
                     <linearGradient id={`color-${activeTab}`} x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor={config.color} stopOpacity={0.4}/>
@@ -220,7 +230,7 @@ export function MacroView() {
                   {config.hasBaseline && <Line type="monotone" dataKey="baseline" name="Savings (CPF OA)" stroke="#64748b" strokeWidth={3} dot={false} />}
                 </AreaChart>
               ) : config.type === 'bar' ? (
-                <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <BarChart data={data} margin={{ top: 10, right: 10, left: 40, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} opacity={0.5} />
                   <XAxis dataKey="year" stroke="#64748b" tickLine={false} axisLine={false} tickMargin={12} />
                   <YAxis stroke="#64748b" tickFormatter={(v) => `${config.prefix}${v.toLocaleString()}`} tickLine={false} axisLine={false} tickMargin={12} domain={['dataMin', 'auto']} />
@@ -231,7 +241,7 @@ export function MacroView() {
                   <Bar dataKey="value" name={config.name} fill={config.color} radius={[4, 4, 0, 0]} />
                 </BarChart>
               ) : (
-                <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <LineChart data={data} margin={{ top: 10, right: 10, left: 40, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} opacity={0.5} />
                   <XAxis dataKey="year" stroke="#64748b" tickLine={false} axisLine={false} tickMargin={12} />
                   <YAxis stroke="#64748b" tickFormatter={(v) => `${config.prefix}${v.toLocaleString()}`} tickLine={false} axisLine={false} tickMargin={12} domain={['dataMin', 'auto']} />

@@ -19,7 +19,7 @@ try {
   console.log('The Horizon Application is stable. Blast radius is contained.');
   process.exit(0);
 
-} catch (error) {
+} catch {
   console.error('\n================================================');
   console.error('🔴 QA HEALTH REPORT: CRITICAL FAILURE DETECTED');
   console.error('================================================');

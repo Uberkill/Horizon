@@ -1,5 +1,6 @@
 import { useStore } from '../store/useStore';
 import { calculateWealthTrajectory, type ProductPortfolio } from '../utils/mathEngine';
+import { ProtectionHUD } from './ProtectionHUD';
 import {
   ComposedChart,
   Area,
@@ -22,7 +23,7 @@ function ErrorFallback() {
   );
 }
 
-function CustomScatterNode(props: any) {
+const CustomScatterNode = (props: any) => {
   const { cx, cy, payload } = props;
   return (
     <g className="transition-all duration-300">
@@ -95,7 +96,8 @@ export function LifeCanvas() {
   const { 
     clientData, stressTests, economicData, 
     hasShieldPlan, hasCIPlan,
-    premiumEndowment, premiumILP, premiumAnnuity, premiumSRS 
+    premiumEndowment, premiumILP, premiumAnnuity, premiumSRS,
+    lifeEvents
   } = useStore();
 
   const portfolio: ProductPortfolio = {
@@ -107,20 +109,23 @@ export function LifeCanvas() {
     premiumSRS
   };
 
-  const data = calculateWealthTrajectory(clientData, portfolio, stressTests, economicData);
+  const data = calculateWealthTrajectory(clientData, portfolio, stressTests, economicData || undefined, lifeEvents);
 
   // Derive milestones for the Scatter plot
   const milestones = [];
+  
+  // Custom Life Events
+  if (lifeEvents) {
+    lifeEvents.forEach(ev => {
+      const point = data.find(d => d.age === ev.age);
+      if (point) {
+        milestones.push({ age: point.age, optimized: point.optimized, label: ev.label });
+      }
+    });
+  }
+
   const retirementData = data.find(d => d.age === clientData.targetAge);
   if (retirementData) milestones.push({ age: retirementData.age, optimized: retirementData.optimized, label: 'Retirement' });
-
-  const propAge = clientData.targetAge - 10;
-  const propertyData = data.find(d => d.age === propAge && propAge > clientData.age + 2);
-  if (propertyData) milestones.push({ age: propertyData.age, optimized: propertyData.optimized, label: 'Property Purchase' });
-
-  const travelAge = clientData.targetAge + 5;
-  const travelData = data.find(d => d.age === travelAge);
-  if (travelData) milestones.push({ age: travelData.age, optimized: travelData.optimized, label: 'Travel Goal' });
 
   const formatYAxis = (value: number) => {
     if (Math.abs(value) >= 1000000) {
@@ -138,6 +143,9 @@ export function LifeCanvas() {
         {/* Decorative Glow */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-lime-500/5 rounded-full blur-[100px] pointer-events-none" />
         
+        {/* Protection Gamification HUD */}
+        <ProtectionHUD />
+
         <div className="mb-8 flex justify-between items-start relative z-10">
           <div>
             <h2 className="text-3xl font-semibold text-slate-100 mb-2 tracking-tight">Life Canvas</h2>
@@ -153,7 +161,7 @@ export function LifeCanvas() {
 
         <div className="flex-1 w-full min-h-0 relative z-10 -ml-4">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={data} margin={{ top: 40, right: 30, left: 20, bottom: 20 }}>
+            <ComposedChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorOptimized" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#a3e635" stopOpacity={0.3}/>
@@ -185,11 +193,12 @@ export function LifeCanvas() {
               <Line 
                 type="monotone" 
                 dataKey="baseline" 
-                name="Baseline" 
-                stroke="#ef4444" 
-                strokeWidth={3}
+                name="Status Quo Baseline" 
+                stroke="#64748b" 
+                strokeWidth={2}
+                strokeDasharray="5 5"
                 dot={false} 
-                activeDot={{ r: 6, fill: "#ef4444", stroke: "#0f172a", strokeWidth: 2 }}
+                activeDot={{ r: 4, fill: "#64748b", stroke: "#0f172a", strokeWidth: 2 }}
               />
               
               <Area 
@@ -275,10 +284,10 @@ export function LifeCanvas() {
         </div>
         
         {/* Custom Legend to match image */}
-        <div className="absolute bottom-6 left-0 right-0 flex justify-center flex-wrap items-center gap-4 px-8 pointer-events-none z-20">
+        <div className="flex justify-center flex-wrap items-center gap-2 md:gap-4 mt-6 z-20 print:hidden">
           <div className="flex items-center gap-2 bg-slate-900/60 px-3 py-1.5 rounded-full backdrop-blur-md border border-slate-700/50">
-            <div className="w-3 h-1 bg-rose-500 rounded-full" />
-            <span className="text-[10px] text-slate-300 font-medium">Unprotected Baseline</span>
+            <div className="w-4 h-0.5 border-t-2 border-dashed border-slate-500" />
+            <span className="text-[10px] text-slate-300 font-medium whitespace-nowrap">Status Quo Baseline</span>
           </div>
           <div className="flex items-center gap-2 bg-slate-900/60 px-3 py-1.5 rounded-full backdrop-blur-md border border-slate-700/50">
             <div className="w-2 h-2 bg-[#0ea5e9] rounded-full" />
