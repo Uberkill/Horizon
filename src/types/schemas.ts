@@ -3,7 +3,7 @@ import type { ClientData } from '../store/useStore';
 
 // Strict numeric schema with default fallbacks to prevent NaN cascading
 const safeNumber = z
-  .number({ invalid_type_error: "Must be a number" })
+  .number()
   .min(0, "Cannot be negative")
   .default(0)
   .catch(0);

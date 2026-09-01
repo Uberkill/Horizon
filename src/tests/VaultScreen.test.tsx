@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { VaultScreen } from '../components/VaultScreen';
-import { useStore } from '../store/useStore';
 
 // Mock IndexedDB
 const indexedDB = {
@@ -24,7 +23,7 @@ const indexedDB = {
     }
   })
 };
-global.indexedDB = indexedDB as any;
+globalThis.indexedDB = indexedDB as any;
 
 describe('VaultScreen Component', () => {
   it('renders the empty vault state by default', () => {

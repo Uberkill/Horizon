@@ -6,9 +6,9 @@ import { useStore } from '../store/useStore';
 describe('Widgets Component', () => {
   beforeEach(() => {
     useStore.setState({ 
-      clientData: { clientName: 'Test', currentAge: 30, targetRetirementAge: 65, monthlyIncome: 10000, monthlyExpenses: 5000, cashInBank: 50000, cpfOABalance: 100000, totalDebt: 0 },
+      clientData: { clientName: 'Test', age: 30, targetAge: 65, monthlyIncome: 10000, monthlyExpenses: 5000, cash: 50000, cpfOA: 100000, totalDebt: 0, dependentReliefs: 0 },
       stressTests: { medicalEmergency: false, covidCrash: false, sustainedInflation: false },
-      economicData: { momMedianIncomes: [{ ageGroup: '30-34', medianIncome: 5000 }], masCoreInflation: 0, cpfOARate: 0, optimizedPortfolioReturn: 0 }
+      economicData: { momMedianIncomes: { '30-34': 5000 }, masCoreInflation: 0, cpfOARate: 0, optimizedPortfolioReturn: 0 }
     });
   });
 

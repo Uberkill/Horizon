@@ -6,7 +6,7 @@ import { useStore } from '../store/useStore';
 describe('ProposalView Component', () => {
   beforeEach(() => {
     useStore.setState({ 
-      clientData: { clientName: 'Test Client', currentAge: 30, targetRetirementAge: 65, monthlyIncome: 10000, monthlyExpenses: 5000, cashInBank: 50000, cpfOABalance: 100000, totalDebt: 0 },
+      clientData: { clientName: 'Test Client', age: 30, targetAge: 65, monthlyIncome: 10000, monthlyExpenses: 5000, cash: 50000, cpfOA: 100000, totalDebt: 0, dependentReliefs: 0 },
       hasShieldPlan: true,
       hasCIPlan: true,
       premiumEndowment: 500,

@@ -11,7 +11,7 @@ describe('Math Engine (calculateWealthTrajectory)', () => {
     monthlyExpenses: 5000,
     cash: 50000,
     cpfOA: 100000,
-    totalDebt: 0
+    totalDebt: 0, dependentReliefs: 0
   };
 
   const basePortfolio: ProductPortfolio = {

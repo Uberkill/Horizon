@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { WelcomeScreen } from '../components/WelcomeScreen';
 import { useStore } from '../store/useStore';
@@ -8,7 +8,7 @@ describe('WelcomeScreen Component', () => {
     // Reset store before each test
     useStore.setState({ 
       hasStarted: false, 
-      clientData: { clientName: '', currentAge: 30, targetRetirementAge: 65, monthlyIncome: 0, monthlyExpenses: 0, cashInBank: 0, cpfOABalance: 0, totalDebt: 0 },
+      clientData: { clientName: '', age: 30, targetAge: 65, monthlyIncome: 0, monthlyExpenses: 0, cash: 0, cpfOA: 0, totalDebt: 0, dependentReliefs: 0 },
       isDrawerOpen: false,
       viewMode: 'macro'
     });

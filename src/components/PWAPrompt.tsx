@@ -1,4 +1,4 @@
-import React from 'react';
+
 // @ts-ignore - vite-plugin-pwa virtual module
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { RefreshCw, X } from 'lucide-react';

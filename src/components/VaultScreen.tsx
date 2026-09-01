@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import { FolderHeart, Plus, Download, Upload, Trash2, ShieldCheck, Check } from 'lucide-react';
+import { FolderHeart, Plus, Trash2, ShieldCheck, Check } from 'lucide-react';
 import { encryptData, decryptData } from '../utils/crypto';
 
 // ENCRYPTION_KEY is handled natively inside crypto.ts
@@ -64,7 +64,7 @@ const deleteFromVault = async (id: string) => {
 };
 
 export function VaultScreen() {
-  const { clientData, setClientData, setViewMode, lifeEvents } = useStore();
+  const { setViewMode } = useStore();
   const [drafts, setDrafts] = useState<any[]>([]);
   const [justSaved, setJustSaved] = useState(false);
 

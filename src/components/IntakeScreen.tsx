@@ -5,7 +5,7 @@ import { calculateTax } from '../utils/taxEngine';
 
 export function IntakeScreen() {
   const { 
-    clientData, setClientData, 
+    clientData, 
     isDrawerOpen, setDrawerOpen,
     hasShieldPlan, setHasShieldPlan,
     hasCIPlan, setHasCIPlan,
@@ -18,11 +18,6 @@ export function IntakeScreen() {
   const [warnings, setWarnings] = useState<string[]>([]);
   const [expandedPill, setExpandedPill] = useState<string | null>(null);
 
-  const LIFESTYLES = [
-    { id: 'basic', label: 'Basic Survival', amount: 2000, context: "Solo, Paid HDB, Public Transport" },
-    { id: 'middle', label: 'Middle-Class Comfort', amount: 5000, context: "Married, Dining Out, Shield Plans" },
-    { id: 'luxury', label: 'Luxury Horizon', amount: 10000, context: "Private Healthcare, Car, Travel" }
-  ];
 
   useEffect(() => {
     const newWarnings: string[] = [];
@@ -47,13 +42,6 @@ export function IntakeScreen() {
   
   const unallocated = monthlySurplus - totalPremiums;
   const isDeficit = unallocated < 0;
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    let parsed = Number(value);
-    if (isNaN(parsed)) parsed = 0;
-    setClientData({ [name]: parsed });
-  };
 
   return (
     <>
