@@ -1,7 +1,7 @@
 # Horizon Financial Blueprint
 **An Enterprise-Grade Predictive Financial Visualization Tool**
 
-> **🤖 AI AGENT HANDOFF & ONBOARDING DIRECTIVE**
+> ** AI AGENT HANDOFF & ONBOARDING DIRECTIVE**
 > If you are a new AI agent reading this file to gain context on the project, **welcome**. 
 > To prevent hallucination and get up to speed instantly, you must strictly follow these directives:
 > 
