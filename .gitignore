@@ -22,3 +22,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Test Coverage & Artifacts
+coverage/
+*.lcov
+test-results/
+
+# AI Tooling & Knowledge Graphs
+.serena/
+.agents/
+graphify-out/
+fix_*.cjs
